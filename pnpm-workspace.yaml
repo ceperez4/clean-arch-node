@@ -1,0 +1,9 @@
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': false
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@nestjs/common@12.1.2'
+  - '@nestjs/core@12.1.2'
+  - '@nestjs/platform-express@12.1.2'
+  - '@nestjs/testing@12.1.2'
