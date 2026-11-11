@@ -19,12 +19,19 @@ export class LoginGoogleAuthDto {
     expiration?: number;
 }
 
-export type LoginGoogleAuthResponseDto = {
-    accessToken: string;
-    refreshToken: string;
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    avatar: string;
-};
+export type LoginGoogleAuthResponseDto =
+    | {
+          requiresTwoFactor: true;
+          tempToken: string;
+          email: string;
+      }
+    | {
+          requiresTwoFactor: false;
+          accessToken: string;
+          refreshToken: string;
+          id: number;
+          name: string;
+          email: string;
+          role: string;
+          avatar: string;
+      };

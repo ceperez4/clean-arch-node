@@ -20,4 +20,5 @@ export interface UserGetProfileResponseDto {
     email: string;
     oauth: string;
     avatar: string;
+    twoFactor: boolean;
 }

@@ -23,12 +23,19 @@ export class LoginAuthDto {
     password: string = '';
 }
 
-export type LoginAuthResponseDto = {
-    accessToken: string;
-    refreshToken: string;
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    avatar: string;
-};
+export type LoginAuthResponseDto =
+    | {
+          requiresTwoFactor: true;
+          tempToken: string;
+          email: string;
+      }
+    | {
+          requiresTwoFactor: false;
+          accessToken: string;
+          refreshToken: string;
+          id: number;
+          name: string;
+          email: string;
+          role: string;
+          avatar: string;
+      };

@@ -17,3 +17,9 @@ export interface ICurrentUser {
     role: UserRoleEnum;
     isAdmin: () => boolean;
 }
+
+export interface ITwoFactorTempPayload {
+    sub: number;
+    challengeId: string;
+    purpose: '2FA_CHALLENGE';
+}

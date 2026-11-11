@@ -5,10 +5,17 @@ import { UserGetProfileUseCase } from '../application/user-get-profile-use-case/
 import { GetAllUserUseCase } from '../application/get-all-user-use-case/get-all-user.use-case';
 import { UpdatePasswordUserUseCase } from '../application/update-password-user-use-case/update-password-user.use-case';
 import { UpdateProfileUserUseCase } from '../application/update-profile-user-use-case/update-profile-user.use-case';
+import { ToggleTwoFactorUserUseCase } from '../application/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
 
 @Module({
     imports: [],
     controllers: [UserQueryController, UserCommandController],
-    providers: [UserGetProfileUseCase, GetAllUserUseCase, UpdatePasswordUserUseCase, UpdateProfileUserUseCase],
+    providers: [
+        UserGetProfileUseCase,
+        GetAllUserUseCase,
+        UpdatePasswordUserUseCase,
+        UpdateProfileUserUseCase,
+        ToggleTwoFactorUserUseCase,
+    ],
 })
 export class UserModule {}

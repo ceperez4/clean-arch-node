@@ -1,5 +1,5 @@
 import { ResultSetHeader } from 'mysql2/promise';
-import { IUserOtp, User } from '../../domain/entities/user.entity';
+import { User } from '../../domain/entities/user.entity';
 import {
     IUserCriteria,
     IUserFindAll,
@@ -7,7 +7,7 @@ import {
     UserRepository,
 } from '../../domain/repositories/user.repository';
 import { IPaginationRepoResult } from 'src/common/interfaces/pagination-repositories.interface';
-import { ITotalRow, IUserOtpRow, IUserRow } from './user-mysql.interface';
+import { ITotalRow, IUserRow } from './user-mysql.interface';
 import { BaseMysqlRepository } from 'src/config/db/mysql/base-mysql.repository';
 
 export class UserMysqlImplements extends BaseMysqlRepository implements UserRepository {
@@ -30,7 +30,8 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
                 user_created_at,
                 user_status,
                 user_avatar,
-                user_token_version
+                user_token_version,
+                user_two_factor_enabled
             FROM users
             WHERE ${field[criteria.type]} = ?
         `;
@@ -50,6 +51,7 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             createdAt: row.user_created_at,
             avatar: row.user_avatar,
             tokenVersion: row.user_token_version,
+            twoFactorEnabled: row.user_two_factor_enabled,
         });
         return entity;
     }
@@ -101,7 +103,8 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
                 user_created_at,
                 user_oauth,
                 user_avatar,
-                user_token_version
+                user_token_version,
+                user_two_factor_enabled
             FROM users
             ${baseQuery}
             ${paginationQuery}
@@ -131,6 +134,7 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
                 status: row.user_status,
                 avatar: row.user_avatar,
                 tokenVersion: row.user_token_version,
+                twoFactorEnabled: row.user_two_factor_enabled,
             });
             return entity;
         });
@@ -157,8 +161,9 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             user_status,
             user_created_at,
             user_avatar,
-            user_token_version
-            )VALUES(?,?,?,?,?,?,?,?,?)
+            user_token_version,
+            twoFactorEnabled
+            )VALUES(?,?,?,?,?,?,?,?,?,?)
         `;
         const [result] = await this.conn.query<ResultSetHeader>(query, [
             entity.attributes.name,
@@ -170,45 +175,12 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             entity.attributes.createdAt,
             entity.attributes.avatar,
             entity.attributes.tokenVersion,
+            entity.attributes.twoFactorEnabled,
         ]);
 
         const id = result.insertId;
         entity.attributes.id = id;
         return entity;
-    }
-
-    /************************************************************* */
-    /************************************************************* */
-    async findOneOtp(id: number): Promise<IUserOtp | null> {
-        const query = `
-            SELECT 
-            user_id,user_otp,user_expiration_otp
-            FROM users
-            WHERE user_id = ?
-            ;
-        `;
-        const [rows] = await this.conn.query<IUserOtpRow[]>(query, [id]);
-        if (rows.length === 0) return null;
-        const row = rows[0];
-
-        return {
-            id: row.user_id,
-            otp: row.user_otp,
-            expiration: row.user_expiration_otp,
-        };
-    }
-
-    /************************************************************* */
-    /************************************************************* */
-    async updateOtp(options: IUserOtp): Promise<void> {
-        const query = `
-            UPDATE users SET
-            user_otp = ?,
-            user_expiration_otp = ?
-            WHERE user_id = ?
-            ;
-        `;
-        await this.conn.query<ResultSetHeader>(query, [options.otp, options.expiration, options.id]);
     }
 
     /************************************************************* */
@@ -250,5 +222,16 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             ;
         `;
         await this.conn.query<ResultSetHeader>(query, [version, id]);
+    }
+
+    /************************************************************* */
+    /************************************************************* */
+    async updateTwoFactor(id: number, enabled: boolean): Promise<void> {
+        const query = `
+           UPDATE users SET
+           user_two_factor_enabled = ?
+           WHERE user_id = ?;
+       `;
+        await this.conn.query(query, [enabled ? 1 : 0, id]);
     }
 }

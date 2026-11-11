@@ -20,6 +20,8 @@ import { PassRecoveryStepTwoAuthDto } from '../../application/pass-recovery-step
 import { LogoutAuthDto } from '../../application/logout-auth-use-case/logout-auth.dto';
 import { LogoutAuthUseCase } from '../../application/logout-auth-use-case/logout-auth.use-case';
 import { IAuthCookieHelper } from 'src/common/libs/cookie-manager/auth-cookie.interface';
+import { VerifyTwoFactorAuthDto } from '../../application/verify-two-factor-auth-use-case/verify-two-factor-auth.dto';
+import { VerifyTwoFactorAuthUseCase } from '../../application/verify-two-factor-auth-use-case/verify-two-factor-auth.use-case';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -38,6 +40,7 @@ export class AuthCommandController {
         private readonly passRecoveryStepOneAuthUseCase: PassRecoveryStepOneAuthUseCase,
         private readonly passRecoveryStepTwoAuthUseCase: PassRecoveryStepTwoAuthUseCase,
         private readonly logoutAuthUseCase: LogoutAuthUseCase,
+        private readonly verifyTwoFactorAuthUseCase: VerifyTwoFactorAuthUseCase,
     ) {
         this.googleClientId = this.config.get<string>('envs.googleClientId')!;
         this.client = new OAuth2Client(this.googleClientId);
@@ -50,9 +53,16 @@ export class AuthCommandController {
     @HttpCode(HttpStatus.OK)
     async login(@Body() body: LoginAuthDto, @Res({ passthrough: true }) res: Response) {
         const data = await this.loginAuthUseCase.execute(body);
-        const cookie = this.authCookieHelper.createRefreshTokenCookie(data.refreshToken);
-        res.setHeader('Set-Cookie', cookie);
-        return { status: STATUS_OK, message: 'Inicio de sesión', data: data };
+        if (!data.requiresTwoFactor) {
+            const cookie = this.authCookieHelper.createRefreshTokenCookie(data.refreshToken);
+            res.setHeader('Set-Cookie', cookie);
+        }
+
+        return {
+            status: STATUS_OK,
+            message: data.requiresTwoFactor ? 'Código 2FA enviado al correo' : 'Inicio de sesión',
+            data: data,
+        };
     }
 
     /**************************************************** */
@@ -83,9 +93,17 @@ export class AuthCommandController {
         body.expiration = payload.exp;
 
         const data = await this.loginGoogleAuthUseCase.execute(body);
-        const cookie = this.authCookieHelper.createRefreshTokenCookie(data.refreshToken);
-        res.setHeader('Set-Cookie', cookie);
-        return { status: STATUS_OK, message: 'Inicio de sesión', data: data };
+
+        if (!data.requiresTwoFactor) {
+            const cookie = this.authCookieHelper.createRefreshTokenCookie(data.refreshToken);
+            res.setHeader('Set-Cookie', cookie);
+        }
+
+        return {
+            status: STATUS_OK,
+            message: data.requiresTwoFactor ? 'Código 2FA enviado al correo' : 'Inicio de sesión',
+            data: data,
+        };
     }
 
     /**************************************************** */
@@ -163,6 +181,22 @@ export class AuthCommandController {
         return {
             status: STATUS_OK,
             message: 'Sesión cerrada correctamente',
+        };
+    }
+
+    /**************************************************** */
+    /**************************************************** */
+    @ApiOperation({ summary: 'Verificar código 2FA y completar inicio de sesión' })
+    @Post('verify-2fa')
+    @HttpCode(HttpStatus.OK)
+    async verifyTwoFactor(@Body() body: VerifyTwoFactorAuthDto, @Res({ passthrough: true }) res: Response) {
+        const data = await this.verifyTwoFactorAuthUseCase.execute(body);
+        const cookie = this.authCookieHelper.createRefreshTokenCookie(data.refreshToken);
+        res.setHeader('Set-Cookie', cookie);
+        return {
+            status: STATUS_OK,
+            message: 'Inicio de sesión completado con éxito',
+            data,
         };
     }
 }

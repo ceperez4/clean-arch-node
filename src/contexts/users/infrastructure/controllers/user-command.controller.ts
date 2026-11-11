@@ -13,6 +13,8 @@ import type { ISecureFile } from 'src/common/interfaces/files.interface';
 import { UpdateProfileUserUseCase } from '../../application/update-profile-user-use-case/update-profile-user.use-case';
 import { UpdateProfileUserDto } from '../../application/update-profile-user-use-case/update-profile-user.dto';
 import { ApiUploadFile } from 'src/common/decorators/api-swagger.decorator';
+import { ToggleTwoFactorUserDto } from '../../application/toggle-two-factor-user-use-case/toggle-two-factor-user.dto';
+import { ToggleTwoFactorUserUseCase } from '../../application/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -22,6 +24,7 @@ export class UserCommandController {
     constructor(
         private readonly updatePasswordUserUseCase: UpdatePasswordUserUseCase,
         private readonly updateProfileUserUseCase: UpdateProfileUserUseCase,
+        private readonly toggleTwoFactorUserUseCase: ToggleTwoFactorUserUseCase,
     ) {}
 
     /************************************************ */
@@ -55,5 +58,21 @@ export class UserCommandController {
     ) {
         await this.updateProfileUserUseCase.execute(param.userId, body, files, user);
         return { status: STATUS_OK, message: 'Datos actualizados correctamente' };
+    }
+
+    /************************************************ */
+    /************************************************ */
+    @ApiOperation({ summary: 'Activar o desactivar autenticación en dos pasos (2FA)' })
+    @Put('/:userId/2fa')
+    async toggleTwoFactor(
+        @Body() body: ToggleTwoFactorUserDto,
+        @Param() param: UserIdParamDto,
+        @CurrentUser() user: ICurrentUser,
+    ) {
+        await this.toggleTwoFactorUserUseCase.execute(param.userId, body, user);
+        return {
+            status: STATUS_OK,
+            message: body.enabled ? '2FA habilitado correctamente' : '2FA deshabilitado correctamente',
+        };
     }
 }

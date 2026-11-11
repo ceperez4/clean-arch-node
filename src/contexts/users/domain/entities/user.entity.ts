@@ -11,12 +11,7 @@ export interface PrimitiveUser {
     createdAt: Date;
     avatar: string;
     tokenVersion: number;
-}
-
-export interface IUserOtp {
-    id: number;
-    otp: string;
-    expiration: string;
+    twoFactorEnabled: boolean;
 }
 
 export class User {
@@ -33,6 +28,7 @@ export class User {
         createdAt?: Date | string;
         avatar?: string;
         tokenVersion?: number | string;
+        twoFactorEnabled?: boolean | number;
     }) {
         this.attributes = {
             id: Number(attributes.id) || 0,
@@ -48,6 +44,7 @@ export class User {
                 attributes.tokenVersion !== undefined && attributes.tokenVersion !== null
                     ? Number(attributes.tokenVersion)
                     : 1,
+            twoFactorEnabled: Boolean(attributes.twoFactorEnabled),
         };
     }
 
@@ -72,6 +69,15 @@ export class User {
             createdAt: new Date(),
             avatar: entity.avatar ?? '',
             tokenVersion: entity.tokenVersion ?? 1,
+            twoFactorEnabled: false,
         });
+    }
+
+    enableTwoFactor(): void {
+        this.attributes.twoFactorEnabled = true;
+    }
+
+    disabledTwoFactor(): void {
+        this.attributes.twoFactorEnabled = false;
     }
 }

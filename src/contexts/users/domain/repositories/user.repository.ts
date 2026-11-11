@@ -1,5 +1,5 @@
 import { IPaginationRepoOptions, IPaginationRepoResult } from 'src/common/interfaces/pagination-repositories.interface';
-import { IUserOtp, User } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 import { UserRoleEnum, UserStatusEnum } from 'src/common/enums/user.enum';
 
 export type typeUserCriteria = 'id' | 'email';
@@ -18,15 +18,13 @@ export abstract class UserRepository {
 
     abstract findAll(options: IUserFindAll): Promise<IPaginationRepoResult<User>>;
 
-    abstract findOneOtp(id: number): Promise<IUserOtp | null>;
-
     abstract save(entity: User): Promise<User>;
 
     abstract update(entity: User): Promise<void>;
 
-    abstract updateOtp(options: IUserOtp): Promise<void>;
-
     abstract updatePassword(id: number, password: string): Promise<void>;
 
     abstract updateTokenVersion(id: number, version: number): Promise<void>;
+
+    abstract updateTwoFactor(id: number, enabled: boolean): Promise<void>;
 }

@@ -28,12 +28,14 @@ export class UserGetProfileUseCase {
         });
         if (!user) throw new NotFoundError('Usuario no encontrado');
         const avatarUrl = this.fileStorage.url(user.attributes.avatar, FileStorageEnum.AVATAR);
+
         return {
             id: user.attributes.id,
             name: user.attributes.name,
             email: user.attributes.email,
             oauth: user.attributes.oauth,
             avatar: avatarUrl ?? '',
+            twoFactor: user.attributes.twoFactorEnabled,
         };
     }
 }

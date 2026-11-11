@@ -7,20 +7,21 @@ import { ValidationError } from 'src/common/errors/validation.error';
 import { PassRecoveryStepTwoAuthDto } from './pass-recovery-step-two-auth.dto';
 import { timingSafeEqual } from 'node:crypto';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
-import { IDatesFormatter } from 'src/common/libs/dates-formatter/dates-formatter.interface';
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';
+import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 
 @CustomInjectable()
 export class PassRecoveryStepTwoAuthUseCase {
     constructor(
         public readonly uow: IUnitOfWork,
         private readonly userRepository: UserRepository,
-        private readonly datesFormatter: IDatesFormatter,
         private readonly emailSender: IEmailSender,
         private readonly passwordHasher: IPasswordHasher,
         private readonly cacheManager: ICacheManager,
+        private readonly authChallengeRepository: AuthChallengeRepository,
     ) {}
 
     @TransactionalDBConnection()
@@ -30,45 +31,41 @@ export class PassRecoveryStepTwoAuthUseCase {
             value: payload.email,
         });
         if (!user) throw new NotFoundError('Usuario no encontrado');
+
         if (user.attributes.status !== UserStatusEnum.ACTIVE)
             throw new ValidationError('El usuario no se encuentra activo');
 
-        const otpData = await this.userRepository.findOneOtp(user.attributes.id);
-        if (!otpData) throw new NotFoundError('El código de recuperación no fue encontrado');
+        const challenge = await this.authChallengeRepository.findLatestActive(
+            user.attributes.id,
+            AuthChallengeTypeEnum.PASSWORD_RECOVERY,
+        );
+        if (!challenge) throw new NotFoundError('El código de recuperación no fue encontrado');
 
-        const otpSaved = otpData.otp ?? '';
-        const bufPayload = Buffer.from(payload.otp);
-        const bufSaved = Buffer.from(otpSaved);
-
-        if (
-            bufPayload.length === 0 ||
-            bufSaved.length === 0 ||
-            bufPayload.length !== bufSaved.length ||
-            !timingSafeEqual(bufPayload, bufSaved) //TODO: no depender directamente de node timingSafeEqual
-        ) {
-            throw new ValidationError('El código de recuperación es incorrecto');
+        if (challenge.isExpired()) {
+            throw new ValidationError('El código de verificación ha expirado. Inicia sesión de nuevo.');
         }
 
-        const currentDate = new Date();
-        const expirationDate = new Date(otpData.expiration);
-        if (
-            !otpData.expiration ||
-            Number.isNaN(expirationDate.getTime()) ||
-            expirationDate.getTime() < currentDate.getTime()
-        ) {
-            throw new ValidationError('El código de recuperación ya expiró');
+        if (challenge.isExceededAttempts(3)) {
+            throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
+
+        const bufProvided = Buffer.from(payload.otp);
+        const bufExpected = Buffer.from(challenge.attributes.code);
+        const isMatch = bufProvided.length === bufExpected.length && timingSafeEqual(bufProvided, bufExpected);
+
+        if (!isMatch) {
+            challenge.incrementAttempts();
+            await this.authChallengeRepository.update(challenge);
+            throw new ValidationError('Código de verificación incorrecto');
+        }
+
+        challenge.markAsUsed();
+        await this.authChallengeRepository.update(challenge);
 
         const passwordHashed = await this.passwordHasher.hash(payload.password);
 
         await this.userRepository.updatePassword(user.attributes.id, passwordHashed);
         await this.cacheManager.del(`auth_user:${user.attributes.id}`);
-
-        await this.userRepository.updateOtp({
-            otp: '',
-            id: user.attributes.id,
-            expiration: this.datesFormatter.toString(currentDate),
-        });
 
         void this.emailSender
             .send({

@@ -10,6 +10,7 @@ import { PassRecoveryStepOneAuthUseCase } from '../application/pass-recovery-ste
 import { PassRecoveryStepTwoAuthUseCase } from '../application/pass-recovery-step-two-auth-use-case/pass-recovery-step-two-auth.use-case';
 import { LogoutAuthUseCase } from '../application/logout-auth-use-case/logout-auth.use-case';
 import { CookieManagerModule } from 'src/common/libs/cookie-manager/cookie-manager.module';
+import { VerifyTwoFactorAuthUseCase } from '../application/verify-two-factor-auth-use-case/verify-two-factor-auth.use-case';
 
 @Module({
     imports: [CookieManagerModule],
@@ -24,6 +25,7 @@ import { CookieManagerModule } from 'src/common/libs/cookie-manager/cookie-manag
         PassRecoveryStepOneAuthUseCase,
         PassRecoveryStepTwoAuthUseCase,
         LogoutAuthUseCase,
+        VerifyTwoFactorAuthUseCase,
     ],
 })
 export class AuthModule {}

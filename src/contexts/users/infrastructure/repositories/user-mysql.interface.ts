@@ -12,14 +12,9 @@ export interface IUserRow extends RowDataPacket {
     user_status: UserStatusEnum;
     user_avatar: string;
     user_token_version: number;
+    user_two_factor_enabled: number | boolean;
 }
 
 export interface ITotalRow extends RowDataPacket {
     total: number;
-}
-
-export interface IUserOtpRow extends RowDataPacket {
-    user_id: number;
-    user_otp: string;
-    user_expiration_otp: string;
 }

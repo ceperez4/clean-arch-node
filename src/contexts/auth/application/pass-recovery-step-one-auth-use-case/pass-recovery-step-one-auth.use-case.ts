@@ -8,6 +8,9 @@ import { UserRepository } from 'src/contexts/users/domain/repositories/user.repo
 import { IDatesFormatter } from 'src/common/libs/dates-formatter/dates-formatter.interface';
 import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
+import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { AuthChallenge } from '../../domain/entities/auth-challenge.entity';
+import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 
 @CustomInjectable()
 export class PassRecoveryStepOneAuthUseCase {
@@ -17,6 +20,7 @@ export class PassRecoveryStepOneAuthUseCase {
         private readonly datesFormatter: IDatesFormatter,
         private readonly otpGenerator: IOtpGenerator,
         private readonly emailSender: IEmailSender,
+        private readonly authChallengeRepository: AuthChallengeRepository,
     ) {}
 
     @TransactionalDBConnection()
@@ -37,11 +41,13 @@ export class PassRecoveryStepOneAuthUseCase {
 
         const expiration = this.datesFormatter.currentDatePlusMinutes(5);
 
-        await this.userRepository.updateOtp({
-            id: user.attributes.id,
-            otp: otp,
-            expiration: expiration,
+        const challenge = AuthChallenge.create({
+            userId: user.attributes.id,
+            code: otp,
+            type: AuthChallengeTypeEnum.PASSWORD_RECOVERY,
+            expiresAt: expiration,
         });
+        await this.authChallengeRepository.save(challenge);
 
         const res = await this.emailSender.send({
             to: payload.email,
