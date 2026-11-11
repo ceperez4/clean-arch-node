@@ -12,7 +12,7 @@
 
 **Boilerplate backend empresarial y proyecto de portafolio diseñado con los principios de Arquitectura Limpia (Clean Architecture), Diseño Guiado por el Dominio (DDD) y CQRS sobre NestJS.**
 
-Ofrece una base sólida, desacoplada, testeable y lista para producción con autenticación JWT robusta (rotación y cookies seguras), control de versiones de tokens, lista negra, carga segura de archivos con rollback transaccional, sistema de migraciones nativo con bloqueos distribuidos y documentación OpenAPI Swagger interactiva.
+Ofrece una base sólida, desacoplada, testeable y lista para producción con autenticación JWT robusta (rotación y cookies seguras), **Autenticación en Dos Pasos (2FA/MFA) por correo electrónico**, control de versiones de tokens, lista negra, carga segura de archivos con rollback transaccional, sistema de migraciones nativo con bloqueos distribuidos y documentación OpenAPI Swagger interactiva.
 
 </div>
 
@@ -27,6 +27,7 @@ Ofrece una base sólida, desacoplada, testeable y lista para producción con aut
   - [Transacciones con AsyncLocalStorage](#transacciones-con-asynclocalstorage)
   - [Rollback de Archivos Transaccional](#rollback-de-archivos-transaccional)
   - [Seguridad y Autenticación Avanzada](#seguridad-y-autenticación-avanzada)
+  - [🔐 Sistema de Autenticación en Dos Pasos (2FA) y Desafíos](#-sistema-de-autenticación-en-dos-pasos-2fa-y-desafíos)
 - [📂 Estructura del Repositorio](#-estructura-del-repositorio)
 - [🛠️ Tecnologías y Librerías](#️-tecnologías-y-librerías)
 - [🗄️ Sistema de Migraciones y Base de Datos](#️-sistema-de-migraciones-y-base-de-datos)
@@ -51,8 +52,12 @@ Ofrece una base sólida, desacoplada, testeable y lista para producción con aut
 ## 🎯 Propósito del Proyecto
 
 Este repositorio cumple una doble función:
-1. **Aporte a la comunidad (Boilerplate / Starter Kit):** Servir como plantilla de inicio lista para producción para desarrolladores que desean arrancar proyectos con NestJS sin acoplar su lógica de negocio al framework o al ORM, contando con estándares de seguridad, transacciones, migraciones y autenticación ya resueltos.
+1. **Aporte a la comunidad (Boilerplate / Starter Kit):** Servir como plantilla de inicio lista para producción para desarrolladores que desean arrancar proyectos con NestJS sin acoplar su lógica de negocio al framework o al ORM, contando con estándares de seguridad, transacciones, migraciones, 2FA y autenticación ya resueltos.
 2. **Portafolio Profesional:** Demostrar cómo aplicar patrones avanzados de arquitectura de software (Clean Architecture, DDD, CQRS, AsyncLocalStorage, Unit of Work, Advisory Locks, Decorators personalizados) en el ecosistema TypeScript/Node.js.
+
+> [!TIP]
+> **¿Deseas implementar esta misma arquitectura en Go, Java, PHP, .NET o Python?**  
+> Hemos preparado una guía completa con la especificación técnica, matriz de equivalencias y código de referencia idiomático (con ejemplos detallados en Go + Gin): consulta el [Blueprint de Arquitectura Multi-Lenguaje (ARCHITECTURE_BLUEPRINT.md)](./ARCHITECTURE_BLUEPRINT.md).
 
 ---
 
@@ -79,12 +84,12 @@ El proyecto organiza el código en **Contextos Delimitados (Bounded Contexts)** 
 
 1. **Dominio (`domain`):**
    - El núcleo de la lógica. No depende de NestJS, ni de MySQL ni de librerías externas.
-   - Contiene las entidades puras (`User`, `InvalidToken`), tipos, enumeraciones e interfaces de repositorio (`UserRepository`, `InvalidTokenRepository`).
+   - Contiene las entidades puras (`User`, `InvalidToken`, `AuthChallenge`), tipos, enumeraciones e interfaces de repositorio (`UserRepository`, `InvalidTokenRepository`, `AuthChallengeRepository`).
 2. **Aplicación (`application`):**
-   - Contiene los casos de uso (`RegisterAuthUseCase`, `LoginAuthUseCase`, `UpdateProfileUserUseCase`, etc.).
+   - Contiene los casos de uso (`RegisterAuthUseCase`, `LoginAuthUseCase`, `VerifyTwoFactorAuthUseCase`, `ToggleTwoFactorUserUseCase`, etc.).
    - Orquesta el flujo de negocio, valida reglas y se comunica con abstracciones (interfaces).
 3. **Infraestructura (`infrastructure`):**
-   - Implementa los detalles técnicos: controladores NestJS (`UserCommandController`, `AuthCommandController`), persistencia en base de datos (`UserMysqlImplements`), tareas programadas (`EmptyInvalidTokenAuthJob`), etc.
+   - Implementa los detalles técnicos: controladores NestJS (`UserCommandController`, `AuthCommandController`, `UserQueryController`), persistencia en base de datos (`UserMysqlImplements`, `InvalidTokenMysqlImpl`, `AuthChallengeMysqlImpl`), tareas programadas (`EmptyInvalidTokenAuthJob`), etc.
 4. **Común (`common`):**
    - Transversales compartidos: filtros de excepciones globales (`ExceptionsFilter`), pipes de seguridad, guardias (`AuthGuard`), librerías de utilidad (`jwt-generator`, `password-hasher`, `files-storage`, `cookie-manager`, `cache-manager`).
 
@@ -94,8 +99,8 @@ El proyecto organiza el código en **Contextos Delimitados (Bounded Contexts)** 
 
 A nivel de controladores y casos de uso, las operaciones de modificación de estado (Commands) y de consulta de datos (Queries) están desacopladas:
 
-- **Commands:** Controladores como `UserCommandController` y `AuthCommandController` gestionan mutaciones (crear usuario, actualizar contraseña, cerrar sesión).
-- **Queries:** Controladores como `UserQueryController` gestionan lecturas optimizadas y paginadas (perfiles, listados filtrados).
+- **Commands:** Controladores como `UserCommandController` y `AuthCommandController` gestionan mutaciones (crear usuario, actualizar contraseña, cerrar sesión, verificar 2FA, activar/desactivar 2FA).
+- **Queries:** Controladores como `UserQueryController` gestionan lecturas optimizadas y paginadas (perfiles con estado de 2FA, listados filtrados).
 
 ---
 
@@ -128,7 +133,7 @@ Con el decorador `@FileRollback()` y `fileRollbackContext`, si la operación pos
 - **Lista Negra con Cron Automático:**
   - Los tokens invalidados explícitamente (ej. logout) se registran en la tabla `invalid_tokens`.
   - Un cron job diario (`@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)`) purga automáticamente los registros expirados.
-- **Google OAuth 2.0:** Soporte nativo para inicio de sesión seguro con Google vía token de identidad verificado con `google-auth-library`.
+- **Google OAuth 2.0:** Soporte nativo para inicio de sesión seguro con Google vía token de identidad verificado con `google-auth-library`. Compatible con 2FA si el usuario lo tiene activado.
 - **Subida Segura de Archivos:**
   - Validación de extensiones y tipos MIME permitidos.
   - Procesamiento con `sharp` para sanitizar las imágenes, redimensionarlas y eliminar posibles payloads embebidos en metadatos.
@@ -139,12 +144,64 @@ Con el decorador `@FileRollback()` y `fileRollbackContext`, si la operación pos
 
 ---
 
+### 🔐 Sistema de Autenticación en Dos Pasos (2FA) y Desafíos
+
+El sistema incorpora un mecanismo de **Autenticación en Dos Pasos (2FA/MFA)** desacoplado y seguro, modelado a través de la entidad de dominio `AuthChallenge`:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            FLUJO DE INICIO DE SESIÓN CON 2FA                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+ [Cliente]                 [Servidor (Auth Module)]              [Email / Usuario]
+     │                                │                                │
+     │── 1. POST /api/auth/login ────>│                                │
+     │   (email + contraseña)         │                                │
+     │                                │── Valida credenciales          │
+     │                                │── Verifica 2FA activo? (Sí)    │
+     │                                │── Crea AuthChallenge (LOGIN_2FA)│
+     │                                │── Emite tempToken (JWT 5 min)  │
+     │                                │── Envía código OTP (6 dígitos)─┼──> Recibe OTP
+     │<── 2. Response: 200 OK ────────│                                │
+     │    requiresTwoFactor: true     │                                │
+     │    tempToken: "eyJhbG..."      │                                │
+     │                                │                                │
+     │── 3. POST /api/auth/verify-2fa>│                                │
+     │   { tempToken, otp }           │                                │
+     │                                │── Valida tempToken (purpose)   │
+     │                                │── timingSafeEqual(otp, code)   │
+     │                                │── Limita a máx. 3 intentos     │
+     │                                │── Marca challenge como usado   │
+     │                                │── Emite Access + Refresh Token │
+     │<── 4. Response: 200 OK ────────│                                │
+     │    (Set-Cookie: refreshToken)  │                                │
+     │    { accessToken, user... }    │                                │
+```
+
+#### Características del 2FA:
+1. **Flujo de Dos Fases (Challenge-Response):**
+   - Si el usuario tiene `twoFactorEnabled: true`, `/api/auth/login` o `/api/auth/google` **no** emiten el token de sesión definitivo ni la cookie; en su lugar, devuelven `{ requiresTwoFactor: true, tempToken, email }` y envían un código OTP de 6 dígitos por correo.
+   - El `tempToken` es un JWT de un solo propósito (`purpose: '2FA_CHALLENGE'`) que contiene de forma segura el `challengeId` y vence en 5 minutos.
+2. **Protección contra Fuerza Bruta e Intentos Fallidos:**
+   - Cada desafío rastrea el número de intentos fallidos (`challenge_attempts`).
+   - Al superar **3 intentos incorrectos**, el desafío queda bloqueado (`isExceededAttempts()`) obligando a iniciar sesión nuevamente.
+3. **Prevención de Ataques de Temporización (Timing Attacks):**
+   - La comparación del código OTP recibido contra el esperado se realiza en tiempo constante con `crypto.timingSafeEqual`.
+4. **Desafíos de Un Solo Uso:**
+   - Una vez verificado con éxito, el desafío se marca como consumido (`challenge_used_at`) impidiendo ataques de repetición (*replay attacks*).
+5. **Activación Configurable por Usuario:**
+   - Endpoint protegido `PUT /api/users/:userId/2fa` (`{ enabled: true/false }`) para que los usuarios puedan gestionar la seguridad de su cuenta, invalidando la caché de sesión automáticamente.
+6. **Desafíos Unificados:**
+   - La misma arquitectura de `AuthChallenge` gestiona tanto el **2FA de Login** (`LOGIN_2FA`) como la **Recuperación de Contraseña** (`PASSWORD_RECOVERY`).
+
+---
+
 ## 📂 Estructura del Repositorio
 
 ```text
 clean-arch-node/
 ├── migrations/                    # Scripts SQL ordenados y versionados
-│   └── 0001_init.sql              # Migración inicial (tablas users e invalid_tokens)
+│   └── 0001_init.sql              # Migración inicial (tablas users, invalid_tokens, auth_challenges)
 ├── scripts/                       # Herramientas de automatización y base de datos
 │   ├── database/
 │   │   └── migrator-mysql.ts      # Motor de migraciones con Advisory Locks de MySQL
@@ -154,23 +211,33 @@ clean-arch-node/
 │   │   ├── constants/             # Constantes HTTP y de sistema
 │   │   ├── decorators/            # @TransactionalDBConnection, @FileRollback, @CurrentUser, etc.
 │   │   ├── dtos/                  # DTOs transversales (paginación, parámetros de ruta)
-│   │   ├── enums/                 # Roles, estados y proveedores OAuth
+│   │   ├── enums/                 # Roles, estados, proveedores OAuth y AuthChallengeTypeEnum
 │   │   ├── errors/                # Jerarquía de errores de dominio y aplicación
 │   │   ├── filters/               # ExceptionsFilter global para mapeo HTTP
 │   │   ├── guards/                # AuthGuard con validación de tokens y lista negra
-│   │   ├── interfaces/            # Contratos de archivos, Unit of Work y paginación
-│   │   ├── libs/                  # Adaptadores (JWT, Bcrypt, Sharp, Cache, Cookies, Brevo)
+│   │   ├── interfaces/            # Contratos de archivos, Unit of Work, JWT y 2FA payloads
+│   │   ├── libs/                  # Adaptadores (JWT, Bcrypt, Sharp, Cache, Cookies, Brevo, OTP)
 │   │   └── pipes/                 # UploadSecureFilePipe (sanitización de imágenes)
 │   ├── config/
 │   │   ├── db/                    # Módulo MySQL, Pool provider y Unit of Work
 │   │   └── envs.ts                # Validación y tipado estricto de variables de entorno
 │   ├── contexts/                  # Bounded Contexts (DDD)
 │   │   ├── auth/                  # Contexto de Autenticación
-│   │   │   ├── application/       # Casos de uso (Login, Register, Refresh, Logout, Google)
-│   │   │   ├── domain/            # Entidades e interfaces de InvalidToken
-│   │   │   └── infrastructure/    # Controladores, Jobs (Cron) y Repositorio MySQL
+│   │   │   ├── application/       # Casos de uso (Login, Register, Refresh, Logout, Google, 2FA, Recovery)
+│   │   │   │   ├── login-auth-use-case/
+│   │   │   │   ├── login-google-auth-use-case/
+│   │   │   │   ├── verify-two-factor-auth-use-case/   # Verificación y canje de 2FA
+│   │   │   │   ├── pass-recovery-step-one-auth-use-case/
+│   │   │   │   ├── pass-recovery-step-two-auth-use-case/
+│   │   │   │   └── ...
+│   │   │   ├── domain/            # Entidades (InvalidToken, AuthChallenge) y Repositorios
+│   │   │   └── infrastructure/    # Controladores, Jobs (Cron) y Repositorios MySQL
 │   │   └── users/                 # Contexto de Usuarios
-│   │       ├── application/       # Casos de uso (Perfil, Actualizar Contraseña, Listados)
+│   │       ├── application/       # Casos de uso (Perfil, Actualizar Contraseña, Toggle 2FA, Listados)
+│   │       │   ├── toggle-two-factor-user-use-case/   # Activar / Desactivar 2FA
+│   │       │   ├── update-password-user-use-case/
+│   │       │   ├── update-profile-user-use-case/
+│   │       │   └── ...
 │   │       ├── domain/            # Entidad User, enums y UserRepository
 │   │       └── infrastructure/    # Controladores Command/Query y Repositorio MySQL
 │   ├── app.module.ts              # Módulo raíz de NestJS
@@ -193,8 +260,8 @@ clean-arch-node/
 | **Core Framework** | [NestJS 12](https://nestjs.com/), [Express](https://expressjs.com/) |
 | **Lenguaje** | [TypeScript 5](https://www.typescriptlang.org/) (ES2023 / NodeNext) |
 | **Base de Datos** | [MySQL 8](https://www.mysql.com/) con el driver de alto rendimiento [`mysql2`](https://github.com/sidorares/node-mysql2) |
-| **Seguridad** | [`helmet`](https://helmetjs.github.io/), [`@nestjs/throttler`](https://docs.nestjs.com/security/rate-limiting), [`bcryptjs`](https://github.com/dcodeIO/bcrypt.js) |
-| **Autenticación** | [`jsonwebtoken`](https://github.com/auth0/node-jsonwebtoken), [`google-auth-library`](https://github.com/googleapis/google-auth-library-nodejs) |
+| **Seguridad y Criptografía** | [`helmet`](https://helmetjs.github.io/), [`@nestjs/throttler`](https://docs.nestjs.com/security/rate-limiting), [`bcryptjs`](https://github.com/dcodeIO/bcrypt.js), `crypto.timingSafeEqual` |
+| **Autenticación** | [`jsonwebtoken`](https://github.com/auth0/node-jsonwebtoken), [`google-auth-library`](https://github.com/googleapis/google-auth-library-nodejs), OTP & 2FA Tokens |
 | **Procesamiento de Archivos** | [`multer`](https://github.com/expressjs/multer), [`sharp`](https://sharp.pixelplumbing.com/) (procesamiento y sanitización de imágenes) |
 | **Validación y Configuración** | [`class-validator`](https://github.com/typestack/class-validator), [`class-transformer`](https://github.com/typestack/class-transformer), [`env-var`](https://github.com/evanshortiss/env-var) |
 | **Documentación** | [`@nestjs/swagger`](https://docs.nestjs.com/openapi/introduction) (OpenAPI 3.0) |
@@ -241,8 +308,7 @@ CREATE TABLE IF NOT EXISTS users (
     user_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_avatar VARCHAR(255) DEFAULT '',
     user_token_version INT NOT NULL DEFAULT 1,
-    user_otp VARCHAR(255) NULL,
-    user_expiration_otp DATETIME NULL,
+    user_two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     INDEX idx_user_email (user_email),
     INDEX idx_user_status (user_status),
     INDEX idx_user_role (user_role)
@@ -255,6 +321,21 @@ CREATE TABLE IF NOT EXISTS invalid_tokens (
     inv_token_expiration DATETIME NOT NULL,
     INDEX idx_inv_token_payload (inv_token_payload),
     INDEX idx_inv_token_expiration (inv_token_expiration)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de desafíos de autenticación (2FA y Recuperación de Contraseña)
+CREATE TABLE IF NOT EXISTS auth_challenges (
+    challenge_id VARCHAR(36) PRIMARY KEY,
+    user_id INT NOT NULL,
+    challenge_code VARCHAR(255) NOT NULL,
+    challenge_type ENUM('LOGIN_2FA', 'PASSWORD_RECOVERY') NOT NULL,
+    challenge_attempts TINYINT NOT NULL DEFAULT 0,
+    challenge_expires_at DATETIME NOT NULL,
+    challenge_used_at DATETIME NULL,
+    challenge_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_challenge_user_type (user_id, challenge_type),
+    INDEX idx_challenge_expires (challenge_expires_at),
+    CONSTRAINT fk_challenge_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
@@ -387,17 +468,19 @@ Con la aplicación en marcha, ingresa a la documentación interactiva en:
 | Método | Endpoint | Descripción | Acceso |
 |---|---|---|---|
 | `POST` | `/api/auth/register` | Registro de nuevo usuario | Público |
-| `POST` | `/api/auth/login` | Iniciar sesión (retorna token + cookie) | Público |
-| `POST` | `/api/auth/google` | Iniciar sesión / Registro con Google OAuth | Público |
+| `POST` | `/api/auth/login` | Iniciar sesión (retorna par de tokens o `tempToken` si requiere 2FA) | Público |
+| `POST` | `/api/auth/google` | Iniciar sesión / Registro con Google OAuth (compatible con 2FA) | Público |
+| `POST` | `/api/auth/verify-2fa` | **Verificar código OTP y completar login** (retorna token + cookie) | Público |
 | `POST` | `/api/auth/refresh` | Refrescar Access Token mediante Cookie o Body | Público |
 | `POST` | `/api/auth/logout` | Cerrar sesión y agregar token a lista negra | Público |
-| `POST` | `/api/auth/recover-pass-one` | Solicitar código OTP para recuperación | Público |
+| `POST` | `/api/auth/recover-pass-one` | Solicitar código OTP para recuperación de contraseña | Público |
 | `POST` | `/api/auth/recover-pass-two` | Validar OTP y restablecer contraseña | Público |
 
 #### 👤 Usuarios (`/api/users`)
 | Método | Endpoint | Descripción | Acceso |
 |---|---|---|---|
-| `GET` | `/api/users/:id/profile` | Consultar perfil de usuario | Autenticado |
+| `GET` | `/api/users/:id/profile` | Consultar perfil de usuario (incluye estado `twoFactor`) | Autenticado |
+| `PUT` | `/api/users/:userId/2fa` | **Activar o desactivar autenticación en dos pasos (2FA)** | Autenticado (Propio / ADMIN) |
 | `PUT` | `/api/users/:userId/profile` | Actualizar perfil y subir avatar (Multipart) | Autenticado |
 | `PUT` | `/api/users/:userId/pass` | Cambiar contraseña | Autenticado |
 | `GET` | `/api/users` | Listar usuarios con paginación y filtros | Rol ADMIN |
