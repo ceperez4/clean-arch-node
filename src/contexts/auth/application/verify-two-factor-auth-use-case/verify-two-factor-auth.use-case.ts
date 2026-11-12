@@ -10,7 +10,7 @@ import { IJwtPayload, ITwoFactorTempPayload } from 'src/common/interfaces/jwt-pa
 import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
 import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 import { ValidationError } from 'src/common/errors/validation.error';
-import { timingSafeEqual } from 'node:crypto';
+import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 
 @CustomInjectable()
 export class VerifyTwoFactorAuthUseCase {
@@ -20,7 +20,8 @@ export class VerifyTwoFactorAuthUseCase {
         private readonly userRepository: UserRepository,
         private readonly tokenGenerator: IJwtGenerator,
         private readonly fileStorage: IFileStorage,
-    ) {}
+        private readonly otpGenerator: IOtpGenerator,
+    ) { }
 
     @TransactionalDBConnection()
     async execute(payload: VerifyTwoFactorAuthDto): Promise<VerifyTwoFactorResponseDto> {
@@ -42,9 +43,7 @@ export class VerifyTwoFactorAuthUseCase {
             throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
 
-        const bufProvided = Buffer.from(payload.otp);
-        const bufExpected = Buffer.from(challenge.attributes.code);
-        const isMatch = bufProvided.length === bufExpected.length && timingSafeEqual(bufProvided, bufExpected);
+        const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code)
 
         if (!isMatch) {
             challenge.incrementAttempts();

@@ -5,24 +5,25 @@ import { NotFoundError } from 'src/common/errors/not-found.error';
 import { UserStatusEnum } from 'src/common/enums/user.enum';
 import { ValidationError } from 'src/common/errors/validation.error';
 import { PassRecoveryStepTwoAuthDto } from './pass-recovery-step-two-auth.dto';
-import { timingSafeEqual } from 'node:crypto';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';
 import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
 import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
+import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 
 @CustomInjectable()
 export class PassRecoveryStepTwoAuthUseCase {
     constructor(
         public readonly uow: IUnitOfWork,
         private readonly userRepository: UserRepository,
+        private readonly authChallengeRepository: AuthChallengeRepository,
         private readonly emailSender: IEmailSender,
         private readonly passwordHasher: IPasswordHasher,
         private readonly cacheManager: ICacheManager,
-        private readonly authChallengeRepository: AuthChallengeRepository,
-    ) {}
+        private readonly otpGenerator: IOtpGenerator,
+    ) { }
 
     @TransactionalDBConnection()
     async execute(payload: PassRecoveryStepTwoAuthDto) {
@@ -49,10 +50,8 @@ export class PassRecoveryStepTwoAuthUseCase {
             throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
 
-        const bufProvided = Buffer.from(payload.otp);
-        const bufExpected = Buffer.from(challenge.attributes.code);
-        const isMatch = bufProvided.length === bufExpected.length && timingSafeEqual(bufProvided, bufExpected);
 
+        const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code);
         if (!isMatch) {
             challenge.incrementAttempts();
             await this.authChallengeRepository.update(challenge);

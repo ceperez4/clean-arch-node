@@ -1,7 +1,8 @@
-import { randomUUID, randomInt } from 'node:crypto';
+import { randomUUID, randomInt, timingSafeEqual } from 'node:crypto';
 import { IOtpGenerator, OtpLevel } from './otp-generator.interface';
 
 export class CryptoOtpGenerator extends IOtpGenerator {
+
     private readonly numbers = '0123456789';
     private readonly letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     private readonly symbols = '.?,;-_¡!¿*%&$/()[]{}|@><';
@@ -42,5 +43,12 @@ export class CryptoOtpGenerator extends IOtpGenerator {
             otp += base.charAt(random);
         }
         return otp;
+    }
+
+    safeEqual(a: string, b: string): boolean {
+        const bufProvided = Buffer.from(a);
+        const bufExpected = Buffer.from(b);
+        const isMatch = bufProvided.length === bufExpected.length && timingSafeEqual(bufProvided, bufExpected);
+        return isMatch
     }
 }

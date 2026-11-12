@@ -45,4 +45,17 @@ export abstract class IOtpGenerator {
      * otpGenerator.numericOtp(6);
      */
     abstract numericOtp(length?: number): string;
+
+    /**
+     * Compara dos cadenas mediante un algoritmo de tiempo constante
+     *
+     * @param a - Cadena 1.
+     * @param b - Cadena 2.
+     * @returns Si las cadenas son iguales
+     *
+     * @example
+     * // Retorna: true
+     * otpGenerator.safeEqual('1234abc','1234abc');
+     */
+    abstract safeEqual(a: string, b:string): boolean;
 }
