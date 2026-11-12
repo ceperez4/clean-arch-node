@@ -57,5 +57,5 @@ export abstract class IOtpGenerator {
      * // Retorna: true
      * otpGenerator.safeEqual('1234abc','1234abc');
      */
-    abstract safeEqual(a: string, b:string): boolean;
+    abstract safeEqual(a: string, b: string): boolean;
 }

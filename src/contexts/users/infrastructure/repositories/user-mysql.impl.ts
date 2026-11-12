@@ -162,7 +162,7 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             user_created_at,
             user_avatar,
             user_token_version,
-            twoFactorEnabled
+            user_two_factor_enabled
             )VALUES(?,?,?,?,?,?,?,?,?,?)
         `;
         const [result] = await this.conn.query<ResultSetHeader>(query, [
@@ -175,7 +175,7 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
             entity.attributes.createdAt,
             entity.attributes.avatar,
             entity.attributes.tokenVersion,
-            entity.attributes.twoFactorEnabled,
+            entity.attributes.twoFactorEnabled ? 1 : 0,
         ]);
 
         const id = result.insertId;

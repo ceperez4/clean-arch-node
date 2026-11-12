@@ -21,7 +21,7 @@ export class VerifyTwoFactorAuthUseCase {
         private readonly tokenGenerator: IJwtGenerator,
         private readonly fileStorage: IFileStorage,
         private readonly otpGenerator: IOtpGenerator,
-    ) { }
+    ) {}
 
     @TransactionalDBConnection()
     async execute(payload: VerifyTwoFactorAuthDto): Promise<VerifyTwoFactorResponseDto> {
@@ -43,7 +43,7 @@ export class VerifyTwoFactorAuthUseCase {
             throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
 
-        const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code)
+        const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code);
 
         if (!isMatch) {
             challenge.incrementAttempts();

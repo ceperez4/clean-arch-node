@@ -23,7 +23,7 @@ export class PassRecoveryStepTwoAuthUseCase {
         private readonly passwordHasher: IPasswordHasher,
         private readonly cacheManager: ICacheManager,
         private readonly otpGenerator: IOtpGenerator,
-    ) { }
+    ) {}
 
     @TransactionalDBConnection()
     async execute(payload: PassRecoveryStepTwoAuthDto) {
@@ -49,7 +49,6 @@ export class PassRecoveryStepTwoAuthUseCase {
         if (challenge.isExceededAttempts(3)) {
             throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
-
 
         const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code);
         if (!isMatch) {
