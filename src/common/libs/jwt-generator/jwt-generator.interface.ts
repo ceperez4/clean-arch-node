@@ -49,7 +49,11 @@ export abstract class IJwtGenerator {
      * @returns Carga útil decodificada y tipada como `T`.
      * @throws {UnauthorizedError} Si el token es inválido, vencido o no activo.
      */
-    abstract verify<T extends object = Record<string, unknown>>(token: string, type: TokenType): JwtClaims<T>;
+    abstract verify<T extends object = Record<string, unknown>>(
+        token: string,
+        type: TokenType,
+        options?: { ignoreExpiration?: boolean },
+    ): JwtClaims<T>;
 
     /**
      * Decodifica y extrae la carga útil del token sin verificar firma ni expiración.

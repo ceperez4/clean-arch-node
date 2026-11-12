@@ -61,8 +61,10 @@ export class PassRecoveryStepTwoAuthUseCase {
         await this.authChallengeRepository.update(challenge);
 
         const passwordHashed = await this.passwordHasher.hash(payload.password);
+        const newTokenVersion = user.attributes.tokenVersion + 1;
 
         await this.userRepository.updatePassword(user.attributes.id, passwordHashed);
+        await this.userRepository.updateTokenVersion(user.attributes.id, newTokenVersion);
         await this.cacheManager.del(`auth_user:${user.attributes.id}`);
 
         void this.emailSender

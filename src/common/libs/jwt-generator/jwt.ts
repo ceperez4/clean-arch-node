@@ -66,11 +66,17 @@ export class JwtGenerator extends IJwtGenerator {
         return sign(payload, secret, { expiresIn });
     }
 
-    verify<T extends object = Record<string, unknown>>(token: string, type: TokenType): JwtClaims<T> {
+    verify<T extends object = Record<string, unknown>>(
+        token: string,
+        type: TokenType,
+        options?: { ignoreExpiration?: boolean },
+    ): JwtClaims<T> {
         const secret = this.getSecret(type);
 
         try {
-            const decoded = verify(token, secret);
+            const decoded = verify(token, secret, {
+                ignoreExpiration: options?.ignoreExpiration ?? false,
+            });
             return decoded as T;
         } catch (error) {
             if (error instanceof TokenExpiredError) {
