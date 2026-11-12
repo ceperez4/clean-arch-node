@@ -37,7 +37,8 @@ export class LoginGoogleAuthUseCase {
 
     @TransactionalDBConnection()
     async execute(payload: LoginGoogleAuthDto): Promise<LoginGoogleAuthResponseDto> {
-        const isBlacklisted = await this.invalidTokenRepository.isBlackList(payload.token);
+        const tokenHash = this.otpGenerator.sha256(payload.token);
+        const isBlacklisted = await this.invalidTokenRepository.isBlackList(tokenHash);
         if (isBlacklisted) {
             throw new UnauthorizedError('El token de Google ya ha sido utilizado');
         }
@@ -96,7 +97,7 @@ export class LoginGoogleAuthUseCase {
 
         await this.invalidTokenRepository.add(
             InvalidToken.create({
-                payload: payload.token,
+                payload: tokenHash,
                 expiration: expirationDate,
             }),
         );

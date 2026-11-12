@@ -8,6 +8,7 @@ import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.
 import { IJwtGenerator, JwtClaims } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';
+import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 
 @CustomInjectable()
 export class LogoutAuthUseCase {
@@ -17,6 +18,7 @@ export class LogoutAuthUseCase {
         private readonly userRepository: UserRepository,
         private readonly cacheManager: ICacheManager,
         private readonly tokenGenerator: IJwtGenerator,
+        private readonly otpGenerator: IOtpGenerator,
     ) {}
 
     @TransactionalDBConnection()
@@ -25,7 +27,8 @@ export class LogoutAuthUseCase {
             return;
         }
 
-        const isAlreadyBlacklisted = await this.invalidTokenRepository.isBlackList(payload.refreshToken);
+        const tokenHash = this.otpGenerator.sha256(payload.refreshToken);
+        const isAlreadyBlacklisted = await this.invalidTokenRepository.isBlackList(tokenHash);
         if (isAlreadyBlacklisted) return;
 
         let decoded: JwtClaims<IJwtPayload> | null = null;
@@ -56,7 +59,7 @@ export class LogoutAuthUseCase {
             : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
         const entity = InvalidToken.create({
-            payload: payload.refreshToken,
+            payload: tokenHash,
             expiration: expirationDate,
         });
 

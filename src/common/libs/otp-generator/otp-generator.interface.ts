@@ -58,4 +58,15 @@ export abstract class IOtpGenerator {
      * otpGenerator.safeEqual('1234abc','1234abc');
      */
     abstract safeEqual(a: string, b: string): boolean;
+
+    /**
+     * Genera un hash SHA-256 en formato hexadecimal para una cadena de texto.
+     *
+     * @param payload - Cadena de texto a procesar.
+     * @returns Cadena hexadecimal de 64 caracteres con el digest SHA-256.
+     *
+     * @example
+     * const hash = otpGenerator.sha256('token-de-autenticacion');
+     */
+    abstract sha256(payload: string): string;
 }

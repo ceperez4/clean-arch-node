@@ -9,6 +9,7 @@ import { UserStatusEnum } from 'src/common/enums/user.enum';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
 import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.repository';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
+import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 
 @CustomInjectable()
 export class RefreshTokenAuthUseCase {
@@ -17,6 +18,7 @@ export class RefreshTokenAuthUseCase {
         private readonly userRepository: UserRepository,
         private readonly invalidTokenRepository: InvalidTokenRepository,
         private readonly tokenGenerator: IJwtGenerator,
+        private readonly otpGenerator: IOtpGenerator,
     ) {}
 
     @TransactionalDBConnection()
@@ -25,7 +27,8 @@ export class RefreshTokenAuthUseCase {
             throw new UnauthorizedError('No se proporcionó un token de refresco');
         }
 
-        const exist = await this.invalidTokenRepository.isBlackList(payload.refreshToken);
+        const tokenHash = this.otpGenerator.sha256(payload.refreshToken);
+        const exist = await this.invalidTokenRepository.isBlackList(tokenHash);
 
         if (exist) throw new UnauthorizedError('El token se encuentra en la lista negra');
 
@@ -62,7 +65,7 @@ export class RefreshTokenAuthUseCase {
 
         const expirationDate = data.exp ? new Date(data.exp * 1000) : new Date();
         const entity: InvalidToken = InvalidToken.create({
-            payload: payload.refreshToken,
+            payload: tokenHash,
             expiration: expirationDate,
         });
 

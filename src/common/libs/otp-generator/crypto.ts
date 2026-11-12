@@ -1,4 +1,4 @@
-import { randomUUID, randomInt, timingSafeEqual } from 'node:crypto';
+import { randomUUID, randomInt, timingSafeEqual, createHash } from 'node:crypto';
 import { IOtpGenerator, OtpLevel } from './otp-generator.interface';
 
 export class CryptoOtpGenerator extends IOtpGenerator {
@@ -49,5 +49,9 @@ export class CryptoOtpGenerator extends IOtpGenerator {
         const bufExpected = Buffer.from(b);
         const isMatch = bufProvided.length === bufExpected.length && timingSafeEqual(bufProvided, bufExpected);
         return isMatch;
+    }
+
+    sha256(payload: string): string {
+        return createHash('sha256').update(payload).digest('hex');
     }
 }
