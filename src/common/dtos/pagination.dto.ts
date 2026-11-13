@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsPositive, IsString, IsIn, Matches, Validate, MaxLength } from 'class-validator';
+import { IsInt, IsOptional, IsPositive, IsString, IsIn, Matches, Validate, MaxLength, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -57,6 +57,7 @@ export class PaginationValidationDto {
     @Type(() => Number)
     @IsInt({ message: 'El límite debe ser un número entero' })
     @IsPositive({ message: 'El límite debe ser un número positivo' })
+    @Max(100, { message: 'El límite no puede ser mayor a 100' })
     limit: number = 10;
 
     @ApiProperty({

@@ -84,9 +84,12 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
 
         const queryValues: (string | number)[] = [...filterValues];
         let paginationQuery = '';
+        let safeLimit = 10;
+        let safePage = 1;
         if (limit !== -1) {
-            const safeLimit = Math.max(1, Number.parseInt(String(limit), 10) || 10);
-            const safePage = Math.max(1, Number.parseInt(String(page), 10) || 1);
+            const parsedLimit = Math.max(1, Number.parseInt(String(limit), 10) || 10);
+            safeLimit = Math.min(parsedLimit, 100);
+            safePage = Math.max(1, Number.parseInt(String(page), 10) || 1);
             const offset = (safePage - 1) * safeLimit;
             paginationQuery = ' LIMIT ? OFFSET ? ';
             queryValues.push(safeLimit, offset);
@@ -120,7 +123,7 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
         ]);
 
         const total = Number(rowsTotal[0]?.total ?? 0);
-        const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+        const totalPages = limit > 0 ? Math.ceil(total / safeLimit) : 1;
 
         const entities = rows.map((row) => {
             const entity: User = new User({
@@ -140,8 +143,8 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
         });
 
         return {
-            page,
-            limit,
+            page: limit !== -1 ? safePage : 1,
+            limit: limit !== -1 ? safeLimit : -1,
             total: total,
             totalPages: totalPages,
             data: entities,
