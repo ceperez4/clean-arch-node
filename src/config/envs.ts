@@ -38,12 +38,19 @@ export const loadEnvs = (): IEnvs => {
         ? get('GOOGLE_CLIENT_ID').required().asString()
         : get('GOOGLE_CLIENT_ID').default('dev-google-client-id').asString();
 
+    const corsOrigins = get('CORS_ORIGINS')
+        .default('http://localhost:3000,http://localhost:5173,http://localhost:4200')
+        .asArray(',');
+
     if (isProd) {
         if (jwtAccessSecret === jwtRefreshSecret) {
             throw new Error('JWT_ACCESS_SECRET y JWT_REFRESH_SECRET deben ser diferentes en producción');
         }
         if (jwtAccessSecret.length < 32 || jwtRefreshSecret.length < 32) {
             throw new Error('Los secretos JWT deben tener al menos 32 caracteres en producción');
+        }
+        if (corsOrigins.includes('*')) {
+            throw new Error('CORS_ORIGINS no puede contener "*" en producción cuando credentials está habilitado');
         }
     }
 
@@ -61,9 +68,7 @@ export const loadEnvs = (): IEnvs => {
         jwtAccessExpiresIn: get('JWT_ACCESS_EXPIRES_IN').default('15Min').asString(),
         jwtRefreshExpiresIn: get('JWT_REFRESH_EXPIRES_IN').default('7D').asString(),
         googleClientId: googleClientId,
-        corsOrigins: get('CORS_ORIGINS')
-            .default('http://localhost:3000,http://localhost:5173,http://localhost:4200')
-            .asArray(','),
+        corsOrigins: corsOrigins,
         isProd: isProd,
         maxAgeRefreshCookie: get('MAX_AGE_REFRESH_COOKIE').default(86400000).asIntPositive(),
         appUrl: get('APP_URL').default('http://localhost:3000').asUrlString(),

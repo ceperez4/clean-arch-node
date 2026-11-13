@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'node:path';
+import { createCorsOptions } from './config/cors.config';
+
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.enableShutdownHooks();
@@ -13,19 +15,11 @@ async function bootstrap() {
     const configService = app.get(ConfigService);
     const config = configService.get<IEnvs>('envs');
     const appPort = config ? config.appPort : 3000;
+    const isProd = config?.isProd ?? false;
     const corsOrigins = config?.corsOrigins ?? ['http://localhost:3000'];
 
     app.use(helmet());
-    app.enableCors({
-        origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-            if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-            return callback(new Error(`Origen ${origin} no permitido por la política CORS`), false);
-        },
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        credentials: true,
-    });
+    app.enableCors(createCorsOptions(corsOrigins, isProd));
 
     app.useStaticAssets(join(process.cwd(), 'uploads'), {
         prefix: '/public/',
