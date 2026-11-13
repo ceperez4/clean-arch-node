@@ -19,6 +19,7 @@ export interface IEnvs {
     corsOrigins: string[];
     isProd: boolean;
     maxAgeRefreshCookie: number;
+    trustProxy: string;
 }
 
 export const loadEnvs = (): IEnvs => {
@@ -72,6 +73,7 @@ export const loadEnvs = (): IEnvs => {
         isProd: isProd,
         maxAgeRefreshCookie: get('MAX_AGE_REFRESH_COOKIE').default(86400000).asIntPositive(),
         appUrl: get('APP_URL').default('http://localhost:3000').asUrlString(),
+        trustProxy: get('TRUST_PROXY').default('loopback').asString(),
     };
 };
 

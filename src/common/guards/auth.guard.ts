@@ -137,17 +137,9 @@ export class AuthGuard implements CanActivate {
     /************************************************************ */
     private getClientIp(req: Request): string {
         try {
-            const forwardedFor = req.headers['x-forwarded-for'];
-            if (typeof forwardedFor === 'string') {
-                // Puede contener múltiples IPs separadas por coma, tomamos la primera
-                return forwardedFor.split(',')[0].trim();
-            }
-            const realIp = req.headers['x-real-ip'];
-            if (typeof realIp === 'string') return realIp.trim();
+            const rawIp = req.ip || req.socket?.remoteAddress;
 
-            const ip = req.ip || req.socket?.remoteAddress;
-
-            return typeof ip === 'string' ? ip.replace('::ffff:', '') : '0.0.0.0';
+            return typeof rawIp === 'string' ? rawIp.replace('::ffff:', '').trim() : '0.0.0.0';
         } catch {
             return '0.0.0.0';
         }

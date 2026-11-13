@@ -17,7 +17,9 @@ async function bootstrap() {
     const appPort = config ? config.appPort : 3000;
     const isProd = config?.isProd ?? false;
     const corsOrigins = config?.corsOrigins ?? ['http://localhost:3000'];
+    const trustProxy = config?.trustProxy ?? 'loopback';
 
+    app.set('trust proxy', trustProxy);
     app.use(helmet());
     app.enableCors(createCorsOptions(corsOrigins, isProd));
 
