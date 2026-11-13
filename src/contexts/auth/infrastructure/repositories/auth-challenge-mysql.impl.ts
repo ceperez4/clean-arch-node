@@ -41,7 +41,8 @@ export class AuthChallengeMysqlImpl extends BaseMysqlRepository implements AuthC
                 challenge_used_at,
                 challenge_created_at
             FROM auth_challenges
-            WHERE challenge_id = ?;
+            WHERE challenge_id = ?
+            FOR UPDATE;
         `;
         const [rows] = await this.conn.query<IAuthChallengeRow[]>(query, [id]);
         if (!rows.length) return null;
@@ -76,7 +77,8 @@ export class AuthChallengeMysqlImpl extends BaseMysqlRepository implements AuthC
             FROM auth_challenges
             WHERE user_id = ? AND challenge_type = ? AND challenge_used_at IS NULL
             ORDER BY challenge_created_at DESC
-            LIMIT 1;
+            LIMIT 1
+            FOR UPDATE;
         `;
         const [rows] = await this.conn.query<IAuthChallengeRow[]>(query, [userId, type]);
         if (!rows.length) return null;

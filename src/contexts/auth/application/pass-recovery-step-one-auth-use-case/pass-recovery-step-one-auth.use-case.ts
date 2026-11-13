@@ -39,12 +39,12 @@ export class PassRecoveryStepOneAuthUseCase {
         }
 
         const otp = this.otpGenerator.otp(5, 2);
-
+        const hashedOtp = this.otpGenerator.sha256(otp);
         const expiration = this.datesFormatter.currentDatePlusMinutes(5);
 
         const challenge = AuthChallenge.create({
             userId: user.attributes.id,
-            code: otp,
+            code: hashedOtp,
             type: AuthChallengeTypeEnum.PASSWORD_RECOVERY,
             expiresAt: expiration,
         });

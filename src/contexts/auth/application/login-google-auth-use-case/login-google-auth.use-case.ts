@@ -119,12 +119,12 @@ export class LoginGoogleAuthUseCase {
         }
 
         const otp = this.otpGenerator.otp(6, 2);
-
+        const hashedOtp = this.otpGenerator.sha256(otp);
         const expiresAt = this.datesFormatter.currentDatePlusMinutes(5);
 
         const challenge = AuthChallenge.create({
             userId: data.sub,
-            code: otp,
+            code: hashedOtp,
             expiresAt: expiresAt,
             type: AuthChallengeTypeEnum.LOGIN_2FA,
         });

@@ -50,7 +50,8 @@ export class PassRecoveryStepTwoAuthUseCase {
             throw new ValidationError('Has superado el número máximo de intentos permitidos. Inicia sesión de nuevo.');
         }
 
-        const isMatch = this.otpGenerator.safeEqual(payload.otp, challenge.attributes.code);
+        const hashedInputOtp = this.otpGenerator.sha256(payload.otp);
+        const isMatch = this.otpGenerator.safeEqual(hashedInputOtp, challenge.attributes.code);
         if (!isMatch) {
             challenge.incrementAttempts();
             await this.authChallengeRepository.update(challenge);
