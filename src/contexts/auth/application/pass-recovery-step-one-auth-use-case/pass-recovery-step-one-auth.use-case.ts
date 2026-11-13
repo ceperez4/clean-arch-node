@@ -24,18 +24,19 @@ export class PassRecoveryStepOneAuthUseCase {
     ) {}
 
     @TransactionalDBConnection()
-    async execute(payload: PassRecoveryStepOneAuthDto) {
+    async execute(payload: PassRecoveryStepOneAuthDto): Promise<void> {
         const user = await this.userRepository.findOneByCriteria({
             type: 'email',
             value: payload.email,
         });
-        if (!user) return;
 
-        if (user.attributes.status !== UserStatusEnum.ACTIVE)
-            throw new ValidationError('El usuario no se encuentra activo');
-
-        if (user.attributes.oauth !== UserOauthEnum.MANUAL)
-            throw new ValidationError('La cuenta no es valida para la recuperación de contraseña');
+        if (
+            !user ||
+            user.attributes.status !== UserStatusEnum.ACTIVE ||
+            user.attributes.oauth !== UserOauthEnum.MANUAL
+        ) {
+            return;
+        }
 
         const otp = this.otpGenerator.otp(5, 2);
 
