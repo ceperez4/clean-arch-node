@@ -42,7 +42,6 @@ Ofrece una base sólida, desacoplada, testeable y lista para producción con aut
   - [4. Ejecutar Migraciones](#4-ejecutar-migraciones)
   - [5. Levantar el Servidor](#5-levantar-el-servidor)
 - [📖 Documentación de la API (Swagger)](#-documentación-de-la-api-swagger)
-- [🧪 Pruebas Automatizadas](#-pruebas-automatizadas)
 - [📜 Scripts Disponibles](#-scripts-disponibles)
 - [🤝 Contribución y Uso](#-contribución-y-uso)
 - [📄 Licencia](#-licencia)
@@ -54,10 +53,6 @@ Ofrece una base sólida, desacoplada, testeable y lista para producción con aut
 Este repositorio cumple una doble función:
 1. **Aporte a la comunidad (Boilerplate / Starter Kit):** Servir como plantilla de inicio lista para producción para desarrolladores que desean arrancar proyectos con NestJS sin acoplar su lógica de negocio al framework o al ORM, contando con estándares de seguridad, transacciones, migraciones, 2FA y autenticación ya resueltos.
 2. **Portafolio Profesional:** Demostrar cómo aplicar patrones avanzados de arquitectura de software (Clean Architecture, DDD, CQRS, AsyncLocalStorage, Unit of Work, Advisory Locks, Decorators personalizados) en el ecosistema TypeScript/Node.js.
-
-> [!TIP]
-> **¿Deseas implementar esta misma arquitectura en Go, Java, PHP, .NET o Python?**  
-> Hemos preparado una guía completa con la especificación técnica, matriz de equivalencias y código de referencia idiomático (con ejemplos detallados en Go + Gin): consulta el [Blueprint de Arquitectura Multi-Lenguaje (ARCHITECTURE_BLUEPRINT.md)](./ARCHITECTURE_BLUEPRINT.md).
 
 ---
 
@@ -129,18 +124,22 @@ Con el decorador `@FileRollback()` y `fileRollbackContext`, si la operación pos
   - `Access Token`: De corta duración (por defecto `15 min`), transmitido en headers Bearer.
   - `Refresh Token`: De larga duración (por defecto `7 días`), almacenado en cookies `HttpOnly`, `SameSite` y `Secure`.
 - **Token Versioning:**
-  - El campo `user_token_version` permite revocar **todas las sesiones activas** de un usuario instantáneamente cuando cambia su contraseña o se desactiva su cuenta.
-- **Lista Negra con Cron Automático:**
-  - Los tokens invalidados explícitamente (ej. logout) se registran en la tabla `invalid_tokens`.
-  - Un cron job diario (`@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)`) purga automáticamente los registros expirados.
+  - El campo `user_token_version` permite revocar **todas las sesiones activas** de un usuario instantáneamente cuando cierra sesión, cambia su contraseña o se desactiva su cuenta.
+- **Lista Negra con Hash Criptográfico y Cron Automático:**
+  - Los tokens invalidados explícitamente (ej. logout, refresh o tokens OAuth) se almacenan hasheados con SHA-256 en la tabla `invalid_tokens`.
+  - Un cron job diario (`@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)`) purga automáticamente los tokens revocados y los desafíos expirados.
 - **Google OAuth 2.0:** Soporte nativo para inicio de sesión seguro con Google vía token de identidad verificado con `google-auth-library`. Compatible con 2FA si el usuario lo tiene activado.
 - **Subida Segura de Archivos:**
-  - Validación de extensiones y tipos MIME permitidos.
-  - Procesamiento con `sharp` para sanitizar las imágenes, redimensionarlas y eliminar posibles payloads embebidos en metadatos.
-- **Cabeceras HTTP y Rate Limit:**
+  - Validación de tipos MIME de imagen permitidos.
+  - Conversión forzada a formato `.webp` con `sharp`, sanitizando metadatos y reemplazando cualquier extensión provista por el cliente para mitigar inyecciones de contenido y XSS almacenado.
+  - Cabecera `X-Content-Type-Options: nosniff` en el servicio de archivos estáticos.
+- **Cabeceras HTTP, Rate Limit y Proxy Seguro:**
   - `helmet` activado para protección contra ataques web comunes.
   - `@nestjs/throttler` configurado globalmente (30 req/seg) y reforzado en endpoints críticos de autenticación (5 req/seg).
-  - CORS parametrizable por variables de entorno con validación estricta de orígenes.
+  - Configuración de `trust proxy` para la extracción sanitizada y a prueba de spoofing de `req.ip` en `AuthGuard`.
+  - CORS parametrizable por variables de entorno con validación estricta de orígenes (prohibiendo comodines `*` en producción con credenciales activas).
+- **Paginación Defensiva:**
+  - Validación estricta con `@Max(100)` en el parámetro `limit` tanto a nivel de DTO como en la capa de persistencia para prevenir ataques de denegación de servicio por agotamiento de heap (DoS/OOM).
 
 ---
 
@@ -180,18 +179,21 @@ El sistema incorpora un mecanismo de **Autenticación en Dos Pasos (2FA/MFA)** d
 
 #### Características del 2FA:
 1. **Flujo de Dos Fases (Challenge-Response):**
-   - Si el usuario tiene `twoFactorEnabled: true`, `/api/auth/login` o `/api/auth/google` **no** emiten el token de sesión definitivo ni la cookie; en su lugar, devuelven `{ requiresTwoFactor: true, tempToken, email }` y envían un código OTP de 6 dígitos por correo.
+   - Si el usuario tiene `user_two_factor_enabled: true`, `/api/auth/login` o `/api/auth/google` **no** emiten el token de sesión definitivo ni la cookie; en su lugar, devuelven `{ requiresTwoFactor: true, tempToken, email }` y envían un código OTP de 6 dígitos por correo.
    - El `tempToken` es un JWT de un solo propósito (`purpose: '2FA_CHALLENGE'`) que contiene de forma segura el `challengeId` y vence en 5 minutos.
 2. **Protección contra Fuerza Bruta e Intentos Fallidos:**
    - Cada desafío rastrea el número de intentos fallidos (`challenge_attempts`).
    - Al superar **3 intentos incorrectos**, el desafío queda bloqueado (`isExceededAttempts()`) obligando a iniciar sesión nuevamente.
-3. **Prevención de Ataques de Temporización (Timing Attacks):**
-   - La comparación del código OTP recibido contra el esperado se realiza en tiempo constante con `crypto.timingSafeEqual`.
-4. **Desafíos de Un Solo Uso:**
+3. **Criptografía Segura y Prevención de Timing Attacks:**
+   - Los códigos OTP se almacenan hasheados con SHA-256 en la base de datos (nunca en texto plano).
+   - La verificación compara el hash del OTP ingresado contra el hash persistido en tiempo constante con `crypto.timingSafeEqual`.
+4. **Bloqueo Pesimista contra Concurrencia:**
+   - Consultas con `SELECT ... FOR UPDATE` dentro de transacciones para garantizar la serialización de intentos y evitar condiciones de carrera.
+5. **Desafíos de Un Solo Uso:**
    - Una vez verificado con éxito, el desafío se marca como consumido (`challenge_used_at`) impidiendo ataques de repetición (*replay attacks*).
-5. **Activación Configurable por Usuario:**
-   - Endpoint protegido `PUT /api/users/:userId/2fa` (`{ enabled: true/false }`) para que los usuarios puedan gestionar la seguridad de su cuenta, invalidando la caché de sesión automáticamente.
-6. **Desafíos Unificados:**
+6. **Gestión Segura de 2FA:**
+   - Endpoint protegido `PUT /api/users/:userId/2fa` (`{ enabled: boolean, currentPassword?: string }`) que exige re-autenticación con contraseña actual para usuarios locales antes de modificar el estado 2FA, notificando al usuario por correo e invalidando su caché de sesión.
+7. **Desafíos Unificados:**
    - La misma arquitectura de `AuthChallenge` gestiona tanto el **2FA de Login** (`LOGIN_2FA`) como la **Recuperación de Contraseña** (`PASSWORD_RECOVERY`).
 
 ---
@@ -242,7 +244,7 @@ clean-arch-node/
 │   │       └── infrastructure/    # Controladores Command/Query y Repositorio MySQL
 │   ├── app.module.ts              # Módulo raíz de NestJS
 │   └── main.ts                    # Bootstrap, configuración de Helmet, CORS, Swagger y Assets
-├── test/                          # Pruebas e2e y configuración de Jest
+├── test/                          # Pruebas unitarias (espejo de src/) y pruebas e2e
 ├── .env.template                  # Plantilla documentada de variables de entorno
 ├── eslint.config.mjs              # Configuración moderna de ESLint (Flat Config)
 ├── nest-cli.json                  # Configuración del CLI de NestJS
@@ -410,7 +412,7 @@ DB_PASS=tu_contraseña
 DB_NAME=node_app
 DB_CONNECTION_LIMIT=10
 
-# Secretos JWT (¡genera claves robustas para producción!)
+# Secretos JWT (en producción deben tener al menos 32 caracteres y ser diferentes entre sí)
 JWT_ACCESS_SECRET=tu_clave_secreta_acceso
 JWT_REFRESH_SECRET=tu_clave_secreta_refresh
 JWT_ACCESS_EXPIRES_IN=15Min
@@ -420,8 +422,11 @@ MAX_AGE_REFRESH_COOKIE=604800000
 # OAuth de Google (opcional o de prueba)
 GOOGLE_CLIENT_ID=tu_google_client_id.apps.googleusercontent.com
 
-# CORS
+# CORS (en producción no se permite '*' con credenciales activas)
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Proxy inverso para extracción confiable de IP (ej: loopback, linklocal, uniquelocal)
+TRUST_PROXY=loopback
 ```
 
 ### 4. Ejecutar Migraciones
@@ -480,25 +485,10 @@ Con la aplicación en marcha, ingresa a la documentación interactiva en:
 | Método | Endpoint | Descripción | Acceso |
 |---|---|---|---|
 | `GET` | `/api/users/:id/profile` | Consultar perfil de usuario (incluye estado `twoFactor`) | Autenticado |
-| `PUT` | `/api/users/:userId/2fa` | **Activar o desactivar autenticación en dos pasos (2FA)** | Autenticado (Propio / ADMIN) |
-| `PUT` | `/api/users/:userId/profile` | Actualizar perfil y subir avatar (Multipart) | Autenticado |
+| `PUT` | `/api/users/:userId/2fa` | **Activar o desactivar 2FA** (requiere `currentPassword` para cuentas manuales) | Autenticado (Propio / ADMIN) |
+| `PUT` | `/api/users/:userId/profile` | Actualizar perfil y subir avatar (Multipart procesado a WebP) | Autenticado |
 | `PUT` | `/api/users/:userId/pass` | Cambiar contraseña | Autenticado |
-| `GET` | `/api/users` | Listar usuarios con paginación y filtros | Rol ADMIN |
-
----
-
-## 🧪 Pruebas Automatizadas
-
-```bash
-# Ejecutar pruebas unitarias
-pnpm run test
-
-# Ejecutar pruebas con reporte de cobertura
-pnpm run test:cov
-
-# Ejecutar pruebas e2e
-pnpm run test:e2e
-```
+| `GET` | `/api/users` | Listar usuarios con paginación defensiva (`limit` máx 100) y filtros | Rol ADMIN |
 
 ---
 
