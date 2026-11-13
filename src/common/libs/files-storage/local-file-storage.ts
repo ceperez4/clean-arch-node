@@ -73,6 +73,8 @@ export class LocalFileStorage extends IFileStorage {
         if (!filename) return null;
         const safeFilename = path.basename(filename);
         const publicRoute = publicRoutes[storage];
-        return `${this.appUrl}${publicRoute}/${encodeURIComponent(safeFilename)}`;
+        const baseUrl = this.appUrl.endsWith('/') ? this.appUrl.slice(0, -1) : this.appUrl;
+        const route = publicRoute.startsWith('/') ? publicRoute.slice(1) : publicRoute;
+        return `${baseUrl}/${route}/${encodeURIComponent(safeFilename)}`;
     }
 }

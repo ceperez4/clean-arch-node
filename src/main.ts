@@ -31,6 +31,9 @@ async function bootstrap() {
         prefix: '/public/',
         maxAge: '7d',
         immutable: true,
+        setHeaders: (res: { setHeader: (name: string, value: string) => void }) => {
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+        },
     });
     app.setGlobalPrefix('api');
 

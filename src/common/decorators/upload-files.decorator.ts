@@ -1,6 +1,7 @@
 import { applyDecorators, BadRequestException, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { ALLOWED_MIME_TYPES } from '../constants/mime-types.constant';
 
 export const FileSize = {
     '1_MB': 1 * 1024 * 1024,
@@ -22,8 +23,7 @@ export function UploadFiles(fieldName: string, fileSize: number, maxCount: numbe
             FilesInterceptor(fieldName, maxCount, {
                 storage: memoryStorage(),
                 fileFilter: (_, file, cb) => {
-                    const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
-                    if (allowedMimeTypes.includes(file.mimetype)) {
+                    if (ALLOWED_MIME_TYPES.includes(file.mimetype as (typeof ALLOWED_MIME_TYPES)[number])) {
                         cb(null, true);
                     } else {
                         cb(
