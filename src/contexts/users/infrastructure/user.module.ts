@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UserQueryController } from './controllers/user-query.controller';
 import { UserCommandController } from './controllers/user-command.controller';
-import { UserGetProfileUseCase } from '../application/user-get-profile-use-case/user-get-profile.use-case';
-import { GetAllUserUseCase } from '../application/get-all-user-use-case/get-all-user.use-case';
-import { UpdatePasswordUserUseCase } from '../application/update-password-user-use-case/update-password-user.use-case';
-import { UpdateProfileUserUseCase } from '../application/update-profile-user-use-case/update-profile-user.use-case';
-import { ToggleTwoFactorUserUseCase } from '../application/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
+import { UserGetProfileUseCase } from '../application/use-cases/user-get-profile-use-case/user-get-profile.use-case';
+import { GetAllUserUseCase } from '../application/use-cases/get-all-user-use-case/get-all-user.use-case';
+import { UpdatePasswordUserUseCase } from '../application/use-cases/update-password-user-use-case/update-password-user.use-case';
+import { UpdateProfileUserUseCase } from '../application/use-cases/update-profile-user-use-case/update-profile-user.use-case';
+import { ToggleTwoFactorUserUseCase } from '../application/use-cases/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
 
 @Module({
     imports: [],

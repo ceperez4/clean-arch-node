@@ -4,17 +4,17 @@ import type { ICurrentUser } from 'src/common/interfaces/jwt-payload.interface';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { STATUS_OK } from 'src/common/constants/http.constant';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UpdatePasswordUserUseCase } from '../../application/update-password-user-use-case/update-password-user.use-case';
-import { UpdatePasswordUserDto } from '../../application/update-password-user-use-case/update-password-user.dto';
+import { UpdatePasswordUserUseCase } from '../../application/use-cases/update-password-user-use-case/update-password-user.use-case';
+import { UpdatePasswordUserDto } from '../../application/use-cases/update-password-user-use-case/update-password-user.dto';
 import { UserIdParamDto } from 'src/common/dtos/user-id-param.dto';
 import { FileSize, UploadFiles } from 'src/common/decorators/upload-files.decorator';
 import { UploadSecureFilePipe } from 'src/common/pipes/upload-secure-file.pipe';
 import type { ISecureFile } from 'src/common/interfaces/files.interface';
-import { UpdateProfileUserUseCase } from '../../application/update-profile-user-use-case/update-profile-user.use-case';
-import { UpdateProfileUserDto } from '../../application/update-profile-user-use-case/update-profile-user.dto';
+import { UpdateProfileUserUseCase } from '../../application/use-cases/update-profile-user-use-case/update-profile-user.use-case';
+import { UpdateProfileUserDto } from '../../application/use-cases/update-profile-user-use-case/update-profile-user.dto';
 import { ApiUploadFile } from 'src/common/decorators/api-swagger.decorator';
-import { ToggleTwoFactorUserDto } from '../../application/toggle-two-factor-user-use-case/toggle-two-factor-user.dto';
-import { ToggleTwoFactorUserUseCase } from '../../application/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
+import { ToggleTwoFactorUserDto } from '../../application/use-cases/toggle-two-factor-user-use-case/toggle-two-factor-user.dto';
+import { ToggleTwoFactorUserUseCase } from '../../application/use-cases/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
 
 @ApiTags('Users')
 @ApiBearerAuth()

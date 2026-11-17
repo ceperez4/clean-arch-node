@@ -225,21 +225,23 @@ clean-arch-node/
 │   │   └── envs.ts                # Validación y tipado estricto de variables de entorno
 │   ├── contexts/                  # Bounded Contexts (DDD)
 │   │   ├── auth/                  # Contexto de Autenticación
-│   │   │   ├── application/       # Casos de uso (Login, Register, Refresh, Logout, Google, 2FA, Recovery)
-│   │   │   │   ├── login-auth-use-case/
-│   │   │   │   ├── login-google-auth-use-case/
-│   │   │   │   ├── verify-two-factor-auth-use-case/   # Verificación y canje de 2FA
-│   │   │   │   ├── pass-recovery-step-one-auth-use-case/
-│   │   │   │   ├── pass-recovery-step-two-auth-use-case/
-│   │   │   │   └── ...
+│   │   │   ├── application/       # Orquestación de aplicación (Casos de uso y Motores)
+│   │   │   │   └── use-cases/     # Casos de uso (Login, Register, Refresh, Logout, Google, 2FA, Recovery)
+│   │   │   │       ├── login-auth-use-case/
+│   │   │   │       ├── login-google-auth-use-case/
+│   │   │   │       ├── verify-two-factor-auth-use-case/   # Verificación y canje de 2FA
+│   │   │   │       ├── pass-recovery-step-one-auth-use-case/
+│   │   │   │       ├── pass-recovery-step-two-auth-use-case/
+│   │   │   │       └── ...
 │   │   │   ├── domain/            # Entidades (InvalidToken, AuthChallenge) y Repositorios
 │   │   │   └── infrastructure/    # Controladores, Jobs (Cron) y Repositorios MySQL
 │   │   └── users/                 # Contexto de Usuarios
-│   │       ├── application/       # Casos de uso (Perfil, Actualizar Contraseña, Toggle 2FA, Listados)
-│   │       │   ├── toggle-two-factor-user-use-case/   # Activar / Desactivar 2FA
-│   │       │   ├── update-password-user-use-case/
-│   │       │   ├── update-profile-user-use-case/
-│   │       │   └── ...
+│   │       ├── application/       # Orquestación de aplicación (Casos de uso y Motores)
+│   │       │   └── use-cases/     # Casos de uso (Perfil, Actualizar Contraseña, Toggle 2FA, Listados)
+│   │       │       ├── toggle-two-factor-user-use-case/   # Activar / Desactivar 2FA
+│   │       │       ├── update-password-user-use-case/
+│   │       │       ├── update-profile-user-use-case/
+│   │       │       └── ...
 │   │       ├── domain/            # Entidad User, enums y UserRepository
 │   │       └── infrastructure/    # Controladores Command/Query y Repositorio MySQL
 │   ├── app.module.ts              # Módulo raíz de NestJS

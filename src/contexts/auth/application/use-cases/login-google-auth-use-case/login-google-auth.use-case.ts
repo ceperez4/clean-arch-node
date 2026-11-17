@@ -4,19 +4,19 @@ import { LoginGoogleAuthDto, LoginGoogleAuthResponseDto } from './login-google-a
 import { UserOauthEnum, UserRoleEnum, UserStatusEnum } from 'src/common/enums/user.enum';
 import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
 import { IJwtPayload, ITwoFactorTempPayload } from 'src/common/interfaces/jwt-payload.interface';
-import { InvalidToken } from '../../domain/entities/invalid-token.entity';
+import { InvalidToken } from '../../../domain/entities/invalid-token.entity';
 import { User } from 'src/contexts/users/domain/entities/user.entity';
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
-import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.repository';
+import { InvalidTokenRepository } from '../../../domain/repositories/invalid-token.repository';
 import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { FileStorageEnum, IFileStorage } from 'src/common/libs/files-storage/file-storage.interface';
 import { IDatesFormatter } from 'src/common/libs/dates-formatter/dates-formatter.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
-import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
-import { AuthChallenge } from '../../domain/entities/auth-challenge.entity';
+import { AuthChallengeRepository } from '../../../domain/repositories/auth-challenge.repository';
+import { AuthChallenge } from '../../../domain/entities/auth-challenge.entity';
 import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 import { UnexpectedError } from 'src/common/errors/unexpected.error';
 

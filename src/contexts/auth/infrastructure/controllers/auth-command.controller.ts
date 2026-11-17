@@ -1,27 +1,27 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { LoginAuthDto } from '../../application/login-auth-use-case/login-auth.dto';
-import { LoginAuthUseCase } from '../../application/login-auth-use-case/login-auth.use-case';
+import { LoginAuthDto } from '../../application/use-cases/login-auth-use-case/login-auth.dto';
+import { LoginAuthUseCase } from '../../application/use-cases/login-auth-use-case/login-auth.use-case';
 import { STATUS_OK } from 'src/common/constants/http.constant';
-import { RefreshTokenAuthDto } from '../../application/refresh-token-auth-use-case/refresh-token-auth.dto';
-import { RefreshTokenAuthUseCase } from '../../application/refresh-token-auth-use-case/refresh-token-auth.use-case';
-import { RegisterAuthUseCase } from '../../application/register-auth-use-case/register-auth.use-case';
-import { RegisterAuthUseDto } from '../../application/register-auth-use-case/register-auth.dto';
+import { RefreshTokenAuthDto } from '../../application/use-cases/refresh-token-auth-use-case/refresh-token-auth.dto';
+import { RefreshTokenAuthUseCase } from '../../application/use-cases/refresh-token-auth-use-case/refresh-token-auth.use-case';
+import { RegisterAuthUseCase } from '../../application/use-cases/register-auth-use-case/register-auth.use-case';
+import { RegisterAuthUseDto } from '../../application/use-cases/register-auth-use-case/register-auth.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { LoginGoogleAuthUseCase } from '../../application/login-google-auth-use-case/login-google-auth.use-case';
-import { LoginGoogleAuthDto } from '../../application/login-google-auth-use-case/login-google-auth.dto';
+import { LoginGoogleAuthUseCase } from '../../application/use-cases/login-google-auth-use-case/login-google-auth.use-case';
+import { LoginGoogleAuthDto } from '../../application/use-cases/login-google-auth-use-case/login-google-auth.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
-import { PassRecoveryStepOneAuthUseCase } from '../../application/pass-recovery-step-one-auth-use-case/pass-recovery-step-one-auth.use-case';
-import { PassRecoveryStepTwoAuthUseCase } from '../../application/pass-recovery-step-two-auth-use-case/pass-recovery-step-two-auth.use-case';
-import { PassRecoveryStepOneAuthDto } from '../../application/pass-recovery-step-one-auth-use-case/pass-recovery-step-one-auth.dto';
-import { PassRecoveryStepTwoAuthDto } from '../../application/pass-recovery-step-two-auth-use-case/pass-recovery-step-two-auth.dto';
-import { LogoutAuthDto } from '../../application/logout-auth-use-case/logout-auth.dto';
-import { LogoutAuthUseCase } from '../../application/logout-auth-use-case/logout-auth.use-case';
+import { PassRecoveryStepOneAuthUseCase } from '../../application/use-cases/pass-recovery-step-one-auth-use-case/pass-recovery-step-one-auth.use-case';
+import { PassRecoveryStepTwoAuthUseCase } from '../../application/use-cases/pass-recovery-step-two-auth-use-case/pass-recovery-step-two-auth.use-case';
+import { PassRecoveryStepOneAuthDto } from '../../application/use-cases/pass-recovery-step-one-auth-use-case/pass-recovery-step-one-auth.dto';
+import { PassRecoveryStepTwoAuthDto } from '../../application/use-cases/pass-recovery-step-two-auth-use-case/pass-recovery-step-two-auth.dto';
+import { LogoutAuthDto } from '../../application/use-cases/logout-auth-use-case/logout-auth.dto';
+import { LogoutAuthUseCase } from '../../application/use-cases/logout-auth-use-case/logout-auth.use-case';
 import { IAuthCookieHelper } from 'src/common/libs/cookie-manager/auth-cookie.interface';
-import { VerifyTwoFactorAuthDto } from '../../application/verify-two-factor-auth-use-case/verify-two-factor-auth.dto';
-import { VerifyTwoFactorAuthUseCase } from '../../application/verify-two-factor-auth-use-case/verify-two-factor-auth.use-case';
+import { VerifyTwoFactorAuthDto } from '../../application/use-cases/verify-two-factor-auth-use-case/verify-two-factor-auth.dto';
+import { VerifyTwoFactorAuthUseCase } from '../../application/use-cases/verify-two-factor-auth-use-case/verify-two-factor-auth.use-case';
 
 @ApiTags('Auth')
 @Controller('auth')

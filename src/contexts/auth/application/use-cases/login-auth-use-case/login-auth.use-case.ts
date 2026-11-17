@@ -9,11 +9,11 @@ import { UserRepository } from 'src/contexts/users/domain/repositories/user.repo
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { FileStorageEnum, IFileStorage } from 'src/common/libs/files-storage/file-storage.interface';
-import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { AuthChallengeRepository } from '../../../domain/repositories/auth-challenge.repository';
 import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 import { IDatesFormatter } from 'src/common/libs/dates-formatter/dates-formatter.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
-import { AuthChallenge } from '../../domain/entities/auth-challenge.entity';
+import { AuthChallenge } from '../../../domain/entities/auth-challenge.entity';
 import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 import { UnexpectedError } from 'src/common/errors/unexpected.error';
 

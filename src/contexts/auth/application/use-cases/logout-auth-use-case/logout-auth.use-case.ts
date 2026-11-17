@@ -2,9 +2,9 @@ import { TransactionalDBConnection } from 'src/common/decorators/db-connection.d
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
 import { IUnitOfWork } from 'src/common/interfaces/unit-of-work.interface';
 import { LogoutAuthDto } from './logout-auth.dto';
-import { InvalidToken } from '../../domain/entities/invalid-token.entity';
+import { InvalidToken } from '../../../domain/entities/invalid-token.entity';
 import { IJwtPayload } from 'src/common/interfaces/jwt-payload.interface';
-import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.repository';
+import { InvalidTokenRepository } from '../../../domain/repositories/invalid-token.repository';
 import { IJwtGenerator, JwtClaims } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';

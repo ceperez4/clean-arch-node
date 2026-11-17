@@ -7,7 +7,7 @@ import type { ISecureFile } from 'src/common/interfaces/files.interface';
 import type { ICurrentUser } from 'src/common/interfaces/jwt-payload.interface';
 import { NotFoundError } from 'src/common/errors/not-found.error';
 import { FileRollback } from 'src/common/decorators/file-rollback.decorator';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserRepository } from '../../../domain/repositories/user.repository';
 import { FileStorageEnum, IFileStorage } from 'src/common/libs/files-storage/file-storage.interface';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';
 

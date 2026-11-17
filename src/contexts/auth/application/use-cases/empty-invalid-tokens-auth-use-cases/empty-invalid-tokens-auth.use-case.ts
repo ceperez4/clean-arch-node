@@ -1,8 +1,8 @@
 import { SimpleDBConnection } from 'src/common/decorators/db-connection.decorator';
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
 import { IUnitOfWork } from 'src/common/interfaces/unit-of-work.interface';
-import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.repository';
-import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { InvalidTokenRepository } from '../../../domain/repositories/invalid-token.repository';
+import { AuthChallengeRepository } from '../../../domain/repositories/auth-challenge.repository';
 
 @CustomInjectable()
 export class EmptyInvalidTokensAuthUseCase {

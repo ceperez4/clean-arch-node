@@ -5,7 +5,7 @@ import { NotFoundError } from 'src/common/errors/not-found.error';
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
 import type { ICurrentUser } from 'src/common/interfaces/jwt-payload.interface';
 import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserRepository } from '../../../domain/repositories/user.repository';
 import { FileStorageEnum, IFileStorage } from 'src/common/libs/files-storage/file-storage.interface';
 
 @CustomInjectable()

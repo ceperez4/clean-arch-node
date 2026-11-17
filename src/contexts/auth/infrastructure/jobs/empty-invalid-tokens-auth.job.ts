@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { EmptyInvalidTokensAuthUseCase } from '../../application/empty-invalid-tokens-auth-use-cases/empty-invalid-tokens-auth.use-case';
+import { EmptyInvalidTokensAuthUseCase } from '../../application/use-cases/empty-invalid-tokens-auth-use-cases/empty-invalid-tokens-auth.use-case';
 
 @Injectable()
 export class EmptyInvalidTokenAuthJob {

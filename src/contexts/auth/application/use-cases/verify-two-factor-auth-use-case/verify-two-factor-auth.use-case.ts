@@ -2,7 +2,7 @@ import { IUnitOfWork } from 'src/common/interfaces/unit-of-work.interface';
 import { VerifyTwoFactorAuthDto, VerifyTwoFactorResponseDto } from './verify-two-factor-auth.dto';
 import { TransactionalDBConnection } from 'src/common/decorators/db-connection.decorator';
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
-import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { AuthChallengeRepository } from '../../../domain/repositories/auth-challenge.repository';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { FileStorageEnum, IFileStorage } from 'src/common/libs/files-storage/file-storage.interface';

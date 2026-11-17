@@ -3,7 +3,7 @@ import { GetAllUserDto, GetAllUserResponseDto } from './get-all-user.dto';
 import { CustomInjectable } from 'src/common/decorators/injectable.decorator';
 import { SimpleDBConnection } from 'src/common/decorators/db-connection.decorator';
 
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserRepository } from '../../../domain/repositories/user.repository';
 
 @CustomInjectable()
 export class GetAllUserUseCase {

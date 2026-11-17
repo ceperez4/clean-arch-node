@@ -5,7 +5,7 @@ import { IUnitOfWork } from 'src/common/interfaces/unit-of-work.interface';
 import { NotFoundError } from 'src/common/errors/not-found.error';
 import type { ICurrentUser, IJwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserRepository } from '../../../domain/repositories/user.repository';
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';

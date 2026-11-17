@@ -4,10 +4,10 @@ import { IUnitOfWork } from 'src/common/interfaces/unit-of-work.interface';
 import { RefreshTokenAuthDto, RefreshTokenAuthResponseDto } from './refresh-token-auth.dto';
 import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
 import { IJwtPayload } from 'src/common/interfaces/jwt-payload.interface';
-import { InvalidToken } from '../../domain/entities/invalid-token.entity';
+import { InvalidToken } from '../../../domain/entities/invalid-token.entity';
 import { UserStatusEnum } from 'src/common/enums/user.enum';
 import { UserRepository } from 'src/contexts/users/domain/repositories/user.repository';
-import { InvalidTokenRepository } from '../../domain/repositories/invalid-token.repository';
+import { InvalidTokenRepository } from '../../../domain/repositories/invalid-token.repository';
 import { IJwtGenerator } from 'src/common/libs/jwt-generator/jwt-generator.interface';
 import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 

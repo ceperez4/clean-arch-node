@@ -9,7 +9,7 @@ import { UserRepository } from 'src/contexts/users/domain/repositories/user.repo
 import { IPasswordHasher } from 'src/common/libs/password-hasher/password-hasher.interface';
 import { IEmailSender } from 'src/common/libs/email-sender/email-sender.interface';
 import { ICacheManager } from 'src/common/libs/cache-manager/cache-manager.interface';
-import { AuthChallengeRepository } from '../../domain/repositories/auth-challenge.repository';
+import { AuthChallengeRepository } from '../../../domain/repositories/auth-challenge.repository';
 import { AuthChallengeTypeEnum } from 'src/common/enums/auth-challenge.enum';
 import { IOtpGenerator } from 'src/common/libs/otp-generator/otp-generator.interface';
 
