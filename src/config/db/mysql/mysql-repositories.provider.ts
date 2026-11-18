@@ -5,6 +5,8 @@ import { InvalidTokenRepository } from 'src/contexts/auth/domain/repositories/in
 import { InvalidTokenMysqlImpl } from 'src/contexts/auth/infrastructure/repositories/invalid-token-mysql.impl';
 import { AuthChallengeRepository } from 'src/contexts/auth/domain/repositories/auth-challenge.repository';
 import { AuthChallengeMysqlImpl } from 'src/contexts/auth/infrastructure/repositories/auth-challenge-mysql.impl';
+import { AuditLogRepository } from 'src/contexts/audit/domain/repositories/audit-log.repository';
+import { AuditLogMysqlImpl } from 'src/contexts/audit/infrastructure/repositories/audit-log-mysql.impl';
 
 export const mysqlRepositoryProviders: Provider[] = [
     {
@@ -18,5 +20,9 @@ export const mysqlRepositoryProviders: Provider[] = [
     {
         provide: AuthChallengeRepository,
         useClass: AuthChallengeMysqlImpl,
+    },
+    {
+        provide: AuditLogRepository,
+        useClass: AuditLogMysqlImpl,
     },
 ];

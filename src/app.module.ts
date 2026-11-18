@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { OtpGeneratorGlobalModule } from './common/libs/otp-generator/otp-generator.module';
 import { UserModule } from './contexts/users/infrastructure/user.module';
+import { AuditModule } from './contexts/audit/infrastructure/audit.module';
 import { DatesFormatterGlobalModule } from './common/libs/dates-formatter/dates-formatter.module';
 import { EmailSenderGlobalModule } from './common/libs/email-sender/email-sender.module';
 import { FilesStorageGlobalModule } from './common/libs/files-storage/files-storage.module';
@@ -37,6 +38,7 @@ import { CacheManagerGlobalModule } from './common/libs/cache-manager/cache-mana
         FilesStorageGlobalModule,
         AuthModule,
         UserModule,
+        AuditModule,
     ],
     controllers: [],
     providers: [

@@ -27,4 +27,6 @@ export abstract class UserRepository {
     abstract updateTokenVersion(id: number, version: number): Promise<void>;
 
     abstract updateTwoFactor(id: number, enabled: boolean): Promise<void>;
+
+    abstract updateStatus(id: number, status: UserStatusEnum, tokenVersion?: number): Promise<void>;
 }

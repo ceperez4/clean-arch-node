@@ -235,15 +235,23 @@ clean-arch-node/
 │   │   │   │       └── ...
 │   │   │   ├── domain/            # Entidades (InvalidToken, AuthChallenge) y Repositorios
 │   │   │   └── infrastructure/    # Controladores, Jobs (Cron) y Repositorios MySQL
-│   │   └── users/                 # Contexto de Usuarios
-│   │       ├── application/       # Orquestación de aplicación (Casos de uso y Motores)
-│   │       │   └── use-cases/     # Casos de uso (Perfil, Actualizar Contraseña, Toggle 2FA, Listados)
-│   │       │       ├── toggle-two-factor-user-use-case/   # Activar / Desactivar 2FA
-│   │       │       ├── update-password-user-use-case/
-│   │       │       ├── update-profile-user-use-case/
-│   │       │       └── ...
-│   │       ├── domain/            # Entidad User, enums y UserRepository
-│   │       └── infrastructure/    # Controladores Command/Query y Repositorio MySQL
+│   │   ├── users/                 # Contexto de Usuarios
+│   │   │   ├── application/       # Orquestación de aplicación (Casos de uso y Motores)
+│   │   │   │   └── use-cases/     # Casos de uso (Perfil, Actualizar Contraseña, Toggle 2FA, Cambiar Estado, Listados)
+│   │   │   │       ├── toggle-two-factor-user-use-case/   # Activar / Desactivar 2FA
+│   │   │   │       ├── update-password-user-use-case/
+│   │   │   │       ├── update-profile-user-use-case/
+│   │   │   │       ├── change-status-user-use-case/       # Consumo del AuditLogEngine transaccional
+│   │   │   │       └── ...
+│   │   │   ├── domain/            # Entidad User, enums y UserRepository
+│   │   │   └── infrastructure/    # Controladores Command/Query y Repositorio MySQL
+│   │   └── audit/                 # Contexto de Auditoría (Ejemplo y Plantilla de Motor)
+│   │       ├── application/       # Motores y Casos de uso
+│   │       │   ├── engines/       # Motores de aplicación
+│   │       │   │   └── audit-log-engine/ # Motor de trazabilidad (Contract, Engine y DTOs)
+│   │       │   └── use-cases/     # Casos de uso de consulta (GetAuditLogs)
+│   │       ├── domain/            # Entidad AuditLog y AuditLogRepository
+│   │       └── infrastructure/    # AuditQueryController, Módulo y Repositorio MySQL
 │   ├── app.module.ts              # Módulo raíz de NestJS
 │   └── main.ts                    # Bootstrap, configuración de Helmet, CORS, Swagger y Assets
 ├── test/                          # Pruebas unitarias (espejo de src/) y pruebas e2e
@@ -341,6 +349,23 @@ CREATE TABLE IF NOT EXISTS auth_challenges (
     INDEX idx_challenge_expires (challenge_expires_at),
     CONSTRAINT fk_challenge_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de pistas de auditoría
+CREATE TABLE IF NOT EXISTS audit_logs (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    audit_resource VARCHAR(100) NOT NULL,
+    audit_resource_id VARCHAR(100) NOT NULL,
+    audit_action VARCHAR(100) NOT NULL,
+    audit_actor_id INT NULL,
+    audit_before_state JSON NULL,
+    audit_after_state JSON NULL,
+    audit_ip VARCHAR(50) NOT NULL DEFAULT '',
+    audit_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_resource (audit_resource, audit_resource_id),
+    INDEX idx_audit_actor (audit_actor_id),
+    INDEX idx_audit_created_at (audit_created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 ```
 
 ---

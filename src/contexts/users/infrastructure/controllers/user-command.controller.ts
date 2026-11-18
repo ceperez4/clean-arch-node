@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Put, UploadedFiles, UseGuards } from '@nestjs/common';
+import { Body, Controller, Ip, Param, Put, UploadedFiles, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import type { ICurrentUser } from 'src/common/interfaces/jwt-payload.interface';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -15,6 +15,10 @@ import { UpdateProfileUserDto } from '../../application/use-cases/update-profile
 import { ApiUploadFile } from 'src/common/decorators/api-swagger.decorator';
 import { ToggleTwoFactorUserDto } from '../../application/use-cases/toggle-two-factor-user-use-case/toggle-two-factor-user.dto';
 import { ToggleTwoFactorUserUseCase } from '../../application/use-cases/toggle-two-factor-user-use-case/toggle-two-factor-user.use-case';
+import { ChangeStatusUserDto } from '../../application/use-cases/change-status-user-use-case/change-status-user.dto';
+import { ChangeStatusUserUseCase } from '../../application/use-cases/change-status-user-use-case/change-status-user.use-case';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRoleEnum } from 'src/common/enums/user.enum';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -25,6 +29,7 @@ export class UserCommandController {
         private readonly updatePasswordUserUseCase: UpdatePasswordUserUseCase,
         private readonly updateProfileUserUseCase: UpdateProfileUserUseCase,
         private readonly toggleTwoFactorUserUseCase: ToggleTwoFactorUserUseCase,
+        private readonly changeStatusUserUseCase: ChangeStatusUserUseCase,
     ) {}
 
     /************************************************ */
@@ -73,6 +78,25 @@ export class UserCommandController {
         return {
             status: STATUS_OK,
             message: body.enabled ? '2FA habilitado correctamente' : '2FA deshabilitado correctamente',
+        };
+    }
+
+    /************************************************ */
+    /************************************************ */
+    @ApiOperation({ summary: 'Cambiar estado de un usuario (Solo Administradores)' })
+    @Roles(UserRoleEnum.ADMIN)
+    @Put('/:userId/status')
+    async changeStatus(
+        @Param() param: UserIdParamDto,
+        @Body() body: ChangeStatusUserDto,
+        @CurrentUser() user: ICurrentUser,
+        @Ip() ip: string,
+    ) {
+        const data = await this.changeStatusUserUseCase.execute(param.userId, body, user, ip);
+        return {
+            status: STATUS_OK,
+            message: 'Estado del usuario actualizado correctamente',
+            data,
         };
     }
 }

@@ -9,6 +9,7 @@ import {
 import { IPaginationRepoResult } from 'src/common/interfaces/pagination-repositories.interface';
 import { ITotalRow, IUserRow } from './user-mysql.interface';
 import { BaseMysqlRepository } from 'src/config/db/mysql/base-mysql.repository';
+import { UserStatusEnum } from 'src/common/enums/user.enum';
 
 export class UserMysqlImplements extends BaseMysqlRepository implements UserRepository {
     /************************************************************* */
@@ -236,5 +237,17 @@ export class UserMysqlImplements extends BaseMysqlRepository implements UserRepo
            WHERE user_id = ?;
        `;
         await this.conn.query(query, [enabled ? 1 : 0, id]);
+    }
+
+    /************************************************************* */
+    /************************************************************* */
+    async updateStatus(id: number, status: UserStatusEnum, tokenVersion?: number): Promise<void> {
+        const query = `
+            UPDATE users SET
+                user_status = ?,
+                user_token_version = COALESCE(?, user_token_version)
+            WHERE user_id = ?
+        `;
+        await this.conn.query<ResultSetHeader>(query, [status, tokenVersion ?? null, id]);
     }
 }

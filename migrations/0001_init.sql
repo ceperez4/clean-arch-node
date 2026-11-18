@@ -39,3 +39,19 @@ CREATE TABLE IF NOT EXISTS auth_challenges (
     INDEX idx_challenge_expires (challenge_expires_at),
     CONSTRAINT fk_challenge_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de pistas de auditoría
+CREATE TABLE IF NOT EXISTS audit_logs (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    audit_resource VARCHAR(100) NOT NULL,
+    audit_resource_id VARCHAR(100) NOT NULL,
+    audit_action VARCHAR(100) NOT NULL,
+    audit_actor_id INT NULL,
+    audit_before_state JSON NULL,
+    audit_after_state JSON NULL,
+    audit_ip VARCHAR(50) NOT NULL DEFAULT '',
+    audit_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_resource (audit_resource, audit_resource_id),
+    INDEX idx_audit_actor (audit_actor_id),
+    INDEX idx_audit_created_at (audit_created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
